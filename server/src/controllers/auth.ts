@@ -1,12 +1,23 @@
 import { z } from "zod";
-import { User } from "../models/index.js";
-import { userSchema } from "../validators/index.js";
-import { JWT_SECRET } from "../config/config.js";
-import ApiError from "../utils/apiError.js";
+import { User } from "@/models";
+import { userSchema } from "@/validators";
+import { JWT_SECRET } from "@/config/config";
+import ApiError from "@/utils/apiError";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { Request, Response } from "express";
+import { JwtPayload } from "@/types";
 
-const generateToken = (res, userId) => {
+
+declare global {
+  namespace Express {
+    interface Request {
+      user: JwtPayload;
+    }
+  }
+}
+
+const generateToken = (res: Response, userId: string) => {
   const token = jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: "7d" });
   res.cookie("token", token, {
     httpOnly: true,
@@ -15,15 +26,13 @@ const generateToken = (res, userId) => {
   });
 };
 
-export const signup = async (req, res) => {
+export const signup = async (req: Request, res: Response) => {
   try {
-    console.log(req.body);
     const { firstName, lastName, username, email, password } = userSchema.parse(
-      req.body,
+      req.body
     );
 
     // check if the user already exists
-
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       throw new ApiError(400, "User already exists");
@@ -38,19 +47,22 @@ export const signup = async (req, res) => {
       lastName,
       username,
       email,
-      password : hashedPassword
+      password: hashedPassword,
     });
 
     // create the token
     // const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
-    generateToken(res, user._id);
+    // convert object id to string
+
+    generateToken(res, user._id.toString());
 
     res.status(201).json({ user });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: error.errors });
+    } else {
+      res.status(500).json({ error: error.message });
     }
-    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -59,13 +71,9 @@ const signInSchema = z.object({
   password: z.string(),
 });
 
-export const signin = async (req, res) => {
+export const signin = async (req: Request, res: Response) => {
   try {
-
-    console.log(req.body);
     const { email, password } = signInSchema.parse(req.body);
-
-    console.log(email, password);
 
     const user = await User.findOne({ email });
     if (!user) throw new ApiError(404, "User not found");
@@ -75,32 +83,33 @@ export const signin = async (req, res) => {
     if (!isMatch) throw new ApiError(400, "Invalid credentials");
 
     // create the token
-    generateToken(res, user._id);
+    generateToken(res, user._id.toString());
 
     // send the user as response
-    return res.status(200).json({ user });
-  } catch (error) {
+    res.status(200).json({ user });
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: error.errors });
+    } else {
+      res.status(500).json({ error: error.message });
     }
-    return res.status(500).json({ error: error.message });
   }
 };
 
-export const checkAuth = async (req, res) => {
+export const checkAuth = async (req: Request, res: Response) => {
   try {
     const user = await User.findById(req.user.id);
-    if(!user) {
-      res.status(404).json({message: "User not found"});
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({user});
-  } catch (error) {
-    res.status(500).json({error: error.message});
+    res.status(200).json({ user });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 };
 
-export const signout = (req, res) => {
-    res.clearCookie("token");
-    res.status(200).json({ message: "Signout successful" });
+export const signout = (req: Request, res: Response) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "Signout successful" });
 };

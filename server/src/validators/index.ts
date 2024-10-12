@@ -11,8 +11,10 @@ const userSchema = z.object({
 const postSchema = z.object({
   title: z.string().min(3).max(255),
   content: z.string().min(3),
-  image: z.string()
 });
 
-export { userSchema, postSchema };
+type postSchemaType = z.infer<typeof postSchema>;
+type userSchemaType = z.infer<typeof userSchema>;
+
+export { userSchema, postSchema, userSchemaType, postSchemaType };
 

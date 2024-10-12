@@ -1,10 +1,11 @@
 import express from "express";
-import logger from "./config/logger.js";
-import { PORT } from "./config/config.js";
-import userRoutes from "./routes/user.js";
-import postRoutes from "./routes/posts.js";
-import ApiError from "./utils/apiError.js";
-import { dbconnect } from "./config/db.js";
+import logger from "@/config/logger";
+import { PORT } from "@/config/config";
+import userRoutes from "@/routes/user";
+import postRoutes from "@/routes/posts";
+import ApiError from "@/utils/apiError";
+import { dbconnect } from "@/config/db";
+
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
