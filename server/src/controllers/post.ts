@@ -1,31 +1,38 @@
 import { z } from "zod";
-import { Post } from "../models/index.js";
-import { uploadOnCloudinary } from "../config/cloudinary.js";
+import { Post } from "@/models";
+import { uploadOnCloudinary } from "@/config/cloudinary";
+import { postSchema, postSchemaType } from "@/validators";
+import { Request, Response } from "express";
+import { PaginationQuery } from "@/types";
 
-export const createPost = async (req, res) => {
+
+export const createPost = async (req: Request, res: Response) => {
   try {
-    const { title, content } = req.body;
+    const { title, content } = postSchema.parse(req.body);
     const author = req.user.id;
     let imageUrl = null;
     let publicId = null;
 
     if (req.file) {
-      const result = await uploadOnCloudinary(req.file.buffer, req.file.originalname);
+      const result = await uploadOnCloudinary(
+        req.file.buffer,
+        req.file.originalname
+      );
       if (result) {
         imageUrl = result.secure_url;
         publicId = result.public_id;
       }
     }
 
-    const post = await Post.create({ 
-      title, 
-      content, 
+    const post = await Post.create({
+      title,
+      content,
       image: imageUrl,
       imagePublicId: publicId,
-      author 
+      author,
     });
     res.status(201).json({ post });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.message });
     } else {
@@ -34,29 +41,36 @@ export const createPost = async (req, res) => {
   }
 };
 
-export const updatePost = async (req, res) => {
+export const updatePost = async (req: Request, res: Response) => {
   try {
-    const { title, content } = req.body;
-    
-    let updateData = { title, content };
+    const { title, content } = postSchema.parse(req.body);
+    const updateData: postSchemaType & {
+      image?: string | null;
+      imagePublicId?: string;
+    } = { title, content };
+
     const existingPost = await Post.findById(req.params.id);
-    if (!existingPost) return res.status(404).json({ error: "Post not found" });
+    if (!existingPost) {
+      res.status(404).json({ error: "Post not found" });
+      return;
+    }
 
     if (req.file) {
-      const result = await uploadOnCloudinary(req.file.buffer, req.file.originalname);
+      const result = await uploadOnCloudinary(
+        req.file.buffer,
+        req.file.originalname
+      );
       if (result) {
         updateData.image = result.secure_url;
         updateData.imagePublicId = result.public_id;
       }
     }
 
-    const post = await Post.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true },
-    );
+    const post = await Post.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+    });
     res.status(200).json({ post });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.message });
     } else {
@@ -65,20 +79,32 @@ export const updatePost = async (req, res) => {
   }
 };
 
-export const deletePost = async (req, res) => {
+export const deletePost = async (req: Request, res: Response) => {
   try {
     const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ error: "Post not found" });
+    if (!post) {
+      res.status(404).json({ error: "Post not found" });
+      return;
+    }
     await Post.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: "Post deleted successfully" });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 };
 
-
-export const getPosts = async (req, res) => {
+export const getPosts = async (
+  req: Request<{}, {}, {}, PaginationQuery>,
+  res: Response
+) => {
   try {
+    if (!req.query.page || !req.query.limit) {
+      res
+        .status(400)
+        .json({ error: "Please provide page and limit query parameters" });
+      return;
+    }
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skipIndex = (page - 1) * limit;
@@ -98,15 +124,25 @@ export const getPosts = async (req, res) => {
       totalPages,
       totalPosts,
       hasNextPage: page < totalPages,
-      hasPrevPage: page > 1
+      hasPrevPage: page > 1,
     });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 };
 
-export const getUserPosts = async (req, res) => {
+export const getUserPosts = async (
+  req: Request<{}, {}, {}, PaginationQuery>,
+  res: Response
+) => {
   try {
+    if (!req.query.page || !req.query.limit) {
+      res
+        .status(400)
+        .json({ error: "Please provide page and limit query parameters" });
+      return;
+    }
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skipIndex = (page - 1) * limit;
@@ -126,20 +162,25 @@ export const getUserPosts = async (req, res) => {
       totalPages,
       totalPosts,
       hasNextPage: page < totalPages,
-      hasPrevPage: page > 1
+      hasPrevPage: page > 1,
     });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 };
 
-export const getPost = async (req, res) => {
+export const getPost = async (req: Request, res: Response) => {
   try {
-    console.log("inside getPost", req.params.id)
-    const post = await Post.findById(req.params.id).populate("author","username");
-    if (!post) return res.status(404).json({ error: "Post not found" });
+    const post = await Post.findById(req.params.id).populate(
+      "author",
+      "username"
+    );
+    if (!post) {
+      res.status(404).json({ error: "Post not found" });
+      return;
+    }
     res.status(200).json({ post });
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 };
