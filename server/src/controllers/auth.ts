@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { User } from "@/models";
-import { userSchema } from "@/validators";
-import { JWT_SECRET } from "@/config/config";
-import ApiError from "@/utils/apiError";
+import { User } from "../models";
+import { userSchema } from "../validators";
+import { JWT_SECRET } from "../config/config";
+import ApiError from "../utils/apiError";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
-import { JwtPayload } from "@/types";
+import { JwtPayload } from "../types";
 
 
 declare global {

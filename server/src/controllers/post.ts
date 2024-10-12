@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { Post } from "@/models";
-import { uploadOnCloudinary } from "@/config/cloudinary";
-import { postSchema, postSchemaType } from "@/validators";
+import { Post } from "../models";
+import { uploadOnCloudinary } from "../config/cloudinary";
+import { postSchema, postSchemaType } from "../validators";
 import { Request, Response } from "express";
-import { PaginationQuery } from "@/types";
+import { PaginationQuery } from "../types";
 
 
 export const createPost = async (req: Request, res: Response) => {

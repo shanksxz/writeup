@@ -6,9 +6,9 @@ import {
   getPost,
   updatePost,
   deletePost,
-} from "@/controllers/post";
-import { auth } from "@/middlewares/auth";
-import { upload } from "@/middlewares/multer";
+} from "../controllers/post";
+import { auth } from "../middlewares/auth";
+import { upload } from "../middlewares/multer";
 
 router.post(
   "/post/create",
