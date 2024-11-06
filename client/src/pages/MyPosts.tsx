@@ -12,26 +12,26 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { getCurrentUserPosts } from "@/helper";
 import type { Post } from "@/types";
 import { stripHtmlAndTruncate } from "@/utils";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function BlogPostManager() {
     const navigate = useNavigate();
-    const [posts, setPosts] = useState<Post[]>([]);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [postToDelete, setPostToDelete] = useState<string>();
     const [postToEdit, setPostToEdit] = useState<Post | null>();
-    const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(0);
     const [searchTerm, setSearchTerm] = useState("");
+    const POSTS_PER_PAGE = 2;
 
     const { control, handleSubmit, setValue, reset } = useForm({
         defaultValues: {
@@ -40,41 +40,64 @@ export default function BlogPostManager() {
         },
     });
 
-    const fetchPosts = useCallback(
-        async (page: number) => {
-            try {
-                setLoading(true);
-                const res = await axios.get(`${import.meta.env.VITE_API_URL}/user/posts`, {
-                    params: { page, limit: 2, search: searchTerm },
-                    withCredentials: true,
-                });
-                setPosts(res.data.posts);
-                setCurrentPage(res.data.currentPage);
-                setTotalPages(res.data.totalPages);
-            } catch (err) {
-                if (err instanceof AxiosError) {
-                    toast.error("Failed to fetch posts");
-                }
-            } finally {
-                setLoading(false);
+    const { data, isLoading, refetch: fetchPosts } = useQuery({
+        queryKey: ['posts', currentPage, searchTerm],
+        queryFn: () => getCurrentUserPosts(currentPage, POSTS_PER_PAGE),
+    });
+
+    const { mutate: deletePost, isPending: isDeleting } = useMutation({
+        mutationFn: async (postId: string) => {
+            await axios.delete(`${import.meta.env.VITE_API_URL}/post/${postId}`, {
+                withCredentials: true,
+            });
+        },
+        onSuccess: () => {
+            toast.success("Post deleted successfully");
+            setIsDeleteDialogOpen(false);
+            setPostToDelete("");
+        },
+        onError: (error: unknown) => {
+            if (error instanceof AxiosError) {
+                toast.error("Error deleting post");
             }
         },
-        [searchTerm],
-    );
+    });
 
-    useEffect(() => {
-        fetchPosts(1);
-    }, [fetchPosts]);
+    const { mutate: updatePost, isPending: isUpdating } = useMutation({
+        mutationFn: async (data: { title: string; content: string; postId: string }) => {
+            await axios.put(
+                `${import.meta.env.VITE_API_URL}/post/${data.postId}`,
+                {
+                    title: data.title,
+                    content: data.content,
+                },
+                {
+                    withCredentials: true,
+                },
+            );
+        },
+        onSuccess: () => {
+            toast.success("Post updated successfully");
+            setIsEditDialogOpen(false);
+            setPostToEdit(null);
+            reset();
+        },
+        onError: (error: unknown) => {
+            if (error instanceof AxiosError) {
+                toast.error("Error updating post");
+            }
+        },
+    });
 
     const handlePageChange = (newPage: number) => {
-        if (newPage >= 1 && newPage <= totalPages) {
-            fetchPosts(newPage);
+        if (newPage >= 1 && newPage <= (data?.totalPages ?? 0)) {
+            setCurrentPage(newPage);
         }
     };
 
     const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        fetchPosts(1);
+        fetchPosts();
     };
 
     const openDeleteDialog = (postId: string) => {
@@ -89,54 +112,19 @@ export default function BlogPostManager() {
         setIsEditDialogOpen(true);
     };
 
-    const handleDelete = async () => {
-        if (!postToDelete) return;
-
-        try {
-            await axios.delete(`${import.meta.env.VITE_API_URL}/post/${postToDelete}`, {
-                withCredentials: true,
-            });
-            toast.success("Post deleted successfully");
-            fetchPosts(currentPage);
-            setIsDeleteDialogOpen(false);
-            setPostToDelete("");
-        } catch (error) {
-            if (error instanceof AxiosError) {
-                toast.error("Error deleting post");
-            }
+    const handleDelete = () => {
+        if (postToDelete) {
+            deletePost(postToDelete);
         }
     };
 
-    const handleEdit = async (data: {
-        title: string;
-        content: string;
-    }) => {
-        if (!postToEdit) return;
-
-        try {
-            await axios.put(
-                `${import.meta.env.VITE_API_URL}/post/${postToEdit._id}`,
-                {
-                    title: data.title,
-                    content: data.content,
-                },
-                {
-                    withCredentials: true,
-                },
-            );
-            toast.success("Post updated successfully");
-            fetchPosts(currentPage);
-            setIsEditDialogOpen(false);
-            setPostToEdit(null);
-            reset();
-        } catch (error) {
-            if (error instanceof AxiosError) {
-                toast.error("Error updating post");
-            }
+    const handleEdit = (data: { title: string; content: string }) => {
+        if (postToEdit) {
+            updatePost({ ...data, postId: postToEdit._id });
         }
     };
 
-    if (loading) {
+    if (isLoading) {
         return (
             <Layout>
                 <div className="flex h-[calc(100vh-4rem)] justify-center items-center">
@@ -174,13 +162,13 @@ export default function BlogPostManager() {
                     </div>
                 </header>
                 <main>
-                    {posts.length === 0 ? (
+                    {data?.posts.length === 0 ? (
                         <p className="text-center text-gray-500 my-8">
                             No posts found. Create a new post to get started!
                         </p>
                     ) : (
                         <div className="grid gap-4 md:gap-6">
-                            {posts.map((post) => (
+                            {data?.posts.map((post) => (
                                 <Card key={post._id}>
                                     <CardHeader>
                                         <CardTitle className="text-xl md:text-2xl">
@@ -223,7 +211,7 @@ export default function BlogPostManager() {
                             ))}
                         </div>
                     )}
-                    {totalPages > 1 && (
+                    {data?.totalPages && data?.totalPages > 1 && (
                         <div className="flex justify-center items-center space-x-4 mt-8 mb-12">
                             <Button
                                 variant="outline"
@@ -235,13 +223,13 @@ export default function BlogPostManager() {
                                 <span className="sr-only">Previous page</span>
                             </Button>
                             <div className="text-sm font-medium">
-                                Page {currentPage} of {totalPages}
+                                Page {currentPage} of {data.totalPages}
                             </div>
                             <Button
                                 variant="outline"
                                 size="icon"
                                 onClick={() => handlePageChange(currentPage + 1)}
-                                disabled={currentPage === totalPages}
+                                disabled={currentPage === data.totalPages}
                             >
                                 <ChevronRight className="h-4 w-4" />
                                 <span className="sr-only">Next page</span>
@@ -263,8 +251,12 @@ export default function BlogPostManager() {
                         <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
                             Cancel
                         </Button>
-                        <Button variant="destructive" onClick={handleDelete}>
-                            Delete
+                        <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? "Deleting..." : "Delete"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -325,8 +317,8 @@ export default function BlogPostManager() {
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" className="mt-2 sm:mt-0">
-                                Save changes
+                            <Button type="submit" className="mt-2 sm:mt-0" disabled={isUpdating}>
+                                {isUpdating ? "Saving..." : "Save changes"}
                             </Button>
                         </DialogFooter>
                     </form>

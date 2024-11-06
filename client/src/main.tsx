@@ -10,6 +10,9 @@ import MyPosts from "./pages/MyPosts.jsx";
 import PostId from "./pages/PostId.jsx";
 import Posts from "./pages/Posts.jsx";
 import Profile from "./pages/Profile.jsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import Protected from "./components/Protected.js";
 
 const router = createBrowserRouter([
     {
@@ -26,19 +29,31 @@ const router = createBrowserRouter([
     },
     {
         path: "/create/post",
-        element: <Posts />,
+        element:
+            <Protected fallBack={<Login />} >
+                <Posts />
+            </Protected>
     },
     {
         path: "/user/post",
-        element: <MyPosts />,
+        element: 
+            <Protected fallBack={<Login />} >
+                <MyPosts />
+            </Protected>
     },
     {
         path: "/post/:id",
-        element: <PostId />,
+        element: 
+            <Protected fallBack={<Login />} >
+                <PostId />
+            </Protected>
     },
     {
         path: "/profile",
-        element: <Profile />,
+        element: 
+            <Protected fallBack={<Login />} >
+                <Profile />
+            </Protected>
     },
     {
         path: "*",
@@ -46,10 +61,15 @@ const router = createBrowserRouter([
     },
 ]);
 
+const queryClient = new QueryClient();
+
 createRoot(document.getElementById("root")!).render(
-    <AuthProvider>
-        <ThemeProvider>
-            <RouterProvider router={router} />
-        </ThemeProvider>
-    </AuthProvider>,
+    <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+            <ThemeProvider>
+                <RouterProvider router={router} />
+                <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+            </ThemeProvider>
+        </AuthProvider>
+    </QueryClientProvider>
 );

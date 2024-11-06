@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
 import * as z from "zod";
 
 const postSchema = z.object({
@@ -38,7 +39,8 @@ type PostForm = z.infer<typeof postSchema>;
 
 export default function CreatePost(): React.ReactElement {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [submitting, setSubmitting] = useState<boolean>(false);
+    const navigate = useNavigate();
+
     const {
         register,
         handleSubmit,
@@ -51,7 +53,6 @@ export default function CreatePost(): React.ReactElement {
 
     // @ts-ignore
     const watchImage = watch("image") as FileList;
-    const navigate = useNavigate();
 
     useEffect(() => {
         if (watchImage && watchImage.length > 0) {
@@ -66,36 +67,42 @@ export default function CreatePost(): React.ReactElement {
         }
     }, [watchImage]);
 
-    const onSubmit: SubmitHandler<PostForm> = async (data: PostForm) => {
-        const formData = new FormData();
-        formData.append("title", data.title);
-        formData.append("content", data.content);
-        formData.append("category", data.category);
-        if (data.image) {
-            formData.append("image", data.image);
-        }
-        setSubmitting(true);
+    const { mutate, status } = useMutation({
+        mutationFn: async (data: PostForm) => {
+            const formData = new FormData();
+            formData.append("title", data.title);
+            formData.append("content", data.content);
+            formData.append("category", data.category);
+            if (data.image) {
+                formData.append("image", data.image);
+            }
 
-        try {
-            await axios.post<Post>(`${import.meta.env.VITE_API_URL}/post/create`, formData, {
+            const response = await axios.post<Post>(`${import.meta.env.VITE_API_URL}/post/create`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
                 withCredentials: true,
             });
+            return response.data;
+        },
+        onSuccess: () => {
             toast.success("Post created successfully, redirecting.....");
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            navigate("/");
-        } catch (error) {
+            setTimeout(() => {
+                navigate("/");
+            }, 2000);
+        },
+        onError: (error: unknown) => {
             if (axios.isAxiosError(error)) {
                 const axiosError = error as AxiosError<{ message: string }>;
                 toast.error(axiosError.response?.data?.message || "Error creating post");
             } else {
                 toast.error("An unexpected error occurred");
             }
-        } finally {
-            setSubmitting(false);
-        }
+        },
+    });
+
+    const onSubmit: SubmitHandler<PostForm> = (data) => {
+        mutate(data);
     };
 
     return (
@@ -165,8 +172,8 @@ export default function CreatePost(): React.ReactElement {
                             />
                         )}
                     </div>
-                    <Button type="submit" disabled={submitting} className="w-full">
-                        {submitting ? "Publishing..." : "Publish Post"}
+                    <Button type="submit" disabled={status === "pending"} className="w-full">
+                        {status === "pending" ? "Publishing..." : "Publish Post"}
                     </Button>
                 </form>
             </div>
