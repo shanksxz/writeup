@@ -6,9 +6,8 @@
     "dev": "tsx watch --clear-screen=false src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "lint": "biome check src/",
-    "lint:fix": "biome check src/ --fix",
-    "format": "biome format src/"
+    "format-and-lint": "biome check src/",
+    "format-and-lint:fix": "biome check src/ --write"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

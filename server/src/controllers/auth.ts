@@ -1,13 +1,12 @@
-import { z } from "zod";
-import { User } from "../models";
-import { userSchema } from "../validators";
-import { JWT_SECRET } from "../config/config";
-import ApiError from "../utils/apiError";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { Request, Response } from "express";
-import { JwtPayload } from "../types";
-
+import type { Request, Response } from "express";
+import jwt from "jsonwebtoken";
+import { z } from "zod";
+import { JWT_SECRET } from "../config/config";
+import { User } from "../models";
+import type { JwtPayload } from "../types";
+import ApiError from "../utils/apiError";
+import { userSchema } from "../validators";
 
 declare global {
   namespace Express {
@@ -28,9 +27,7 @@ const generateToken = (res: Response, userId: string) => {
 
 export const signup = async (req: Request, res: Response) => {
   try {
-    const { firstName, lastName, username, email, password } = userSchema.parse(
-      req.body
-    );
+    const { firstName, lastName, username, email, password } = userSchema.parse(req.body);
 
     // check if the user already exists
     const existingUser = await User.findOne({ email });

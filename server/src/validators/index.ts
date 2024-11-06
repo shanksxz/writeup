@@ -16,5 +16,4 @@ const postSchema = z.object({
 type postSchemaType = z.infer<typeof postSchema>;
 type userSchemaType = z.infer<typeof userSchema>;
 
-export { userSchema, postSchema, userSchemaType, postSchemaType };
-
+export { userSchema, postSchema, type userSchemaType, type postSchemaType };

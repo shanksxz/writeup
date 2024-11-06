@@ -1,5 +1,5 @@
 import express from "express";
-import { signup, signin, checkAuth, signout } from "../controllers/auth";
+import { checkAuth, signin, signout, signup } from "../controllers/auth";
 import { getUserPosts } from "../controllers/post";
 import { auth } from "../middlewares/auth";
 const router = express.Router();
@@ -11,4 +11,3 @@ router.get("/user/posts", auth, getUserPosts);
 router.get("/auth/signout", signout);
 
 export default router;
-

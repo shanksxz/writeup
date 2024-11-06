@@ -1,8 +1,8 @@
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/config";
+import type { JwtPayload } from "../types";
 import ApiError from "../utils/apiError";
-import { JwtPayload } from "../types";
 
 export const auth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -31,4 +31,3 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
     }
   }
 };
-

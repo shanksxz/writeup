@@ -6,9 +6,8 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc -b && vite build",
-        "format": "biome format --write ./src",
-        "lint": "biome lint ./src",
-        "check": "biome check --write ./src"
+        "format-and-lint": "biome check ./src",
+        "format-and-lint:fix": "biome check --write ./src"
     },
     "dependencies": {
         "@hookform/resolvers": "^3.9.0",
