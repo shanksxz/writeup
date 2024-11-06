@@ -1,13 +1,13 @@
-import express, { Request, Response, NextFunction } from "express";
-import logger from "./config/logger";
+import express, { type Request, type Response, type NextFunction } from "express";
 import { ALLOWED_ORIGINS, PORT } from "./config/config";
-import userRoutes from "./routes/user";
-import postRoutes from "./routes/posts";
-import ApiError from "./utils/apiError";
 import { dbconnect } from "./config/db";
+import logger from "./config/logger";
+import postRoutes from "./routes/posts";
+import userRoutes from "./routes/user";
+import ApiError from "./utils/apiError";
 
-import cors from "cors";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 
 const app = express();
 app.use(express.json());

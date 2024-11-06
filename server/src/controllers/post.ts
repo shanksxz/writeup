@@ -1,10 +1,9 @@
+import type { Request, Response } from "express";
 import { z } from "zod";
-import { Post } from "../models";
 import { uploadOnCloudinary } from "../config/cloudinary";
-import { postSchema, postSchemaType } from "../validators";
-import { Request, Response } from "express";
-import { PaginationQuery } from "../types";
-
+import { Post } from "../models";
+import type { PaginationQuery } from "../types";
+import { postSchema, type postSchemaType } from "../validators";
 
 export const createPost = async (req: Request, res: Response) => {
   try {
@@ -14,10 +13,7 @@ export const createPost = async (req: Request, res: Response) => {
     let publicId = null;
 
     if (req.file) {
-      const result = await uploadOnCloudinary(
-        req.file.buffer,
-        req.file.originalname
-      );
+      const result = await uploadOnCloudinary(req.file.buffer, req.file.originalname);
       if (result) {
         imageUrl = result.secure_url;
         publicId = result.public_id;
@@ -56,10 +52,7 @@ export const updatePost = async (req: Request, res: Response) => {
     }
 
     if (req.file) {
-      const result = await uploadOnCloudinary(
-        req.file.buffer,
-        req.file.originalname
-      );
+      const result = await uploadOnCloudinary(req.file.buffer, req.file.originalname);
       if (result) {
         updateData.image = result.secure_url;
         updateData.imagePublicId = result.public_id;
@@ -93,30 +86,21 @@ export const deletePost = async (req: Request, res: Response) => {
   }
 };
 
-export const getPosts = async (
-  req: Request<{}, {}, {}, PaginationQuery>,
-  res: Response
-) => {
+export const getPosts = async (req: Request<{}, {}, {}, PaginationQuery>, res: Response) => {
   try {
     if (!req.query.page || !req.query.limit) {
-      res
-        .status(400)
-        .json({ error: "Please provide page and limit query parameters" });
+      res.status(400).json({ error: "Please provide page and limit query parameters" });
       return;
     }
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = Number.parseInt(req.query.page) || 1;
+    const limit = Number.parseInt(req.query.limit) || 10;
     const skipIndex = (page - 1) * limit;
 
     const totalPosts = await Post.countDocuments();
     const totalPages = Math.ceil(totalPosts / limit);
 
-    const posts = await Post.find()
-      .populate("author", "username")
-      .sort({ createdAt: -1 })
-      .skip(skipIndex)
-      .limit(limit);
+    const posts = await Post.find().populate("author", "username").sort({ createdAt: -1 }).skip(skipIndex).limit(limit);
 
     res.status(200).json({
       posts,
@@ -131,20 +115,15 @@ export const getPosts = async (
   }
 };
 
-export const getUserPosts = async (
-  req: Request<{}, {}, {}, PaginationQuery>,
-  res: Response
-) => {
+export const getUserPosts = async (req: Request<{}, {}, {}, PaginationQuery>, res: Response) => {
   try {
     if (!req.query.page || !req.query.limit) {
-      res
-        .status(400)
-        .json({ error: "Please provide page and limit query parameters" });
+      res.status(400).json({ error: "Please provide page and limit query parameters" });
       return;
     }
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = Number.parseInt(req.query.page) || 1;
+    const limit = Number.parseInt(req.query.limit) || 10;
     const skipIndex = (page - 1) * limit;
 
     const totalPosts = await Post.countDocuments({ author: req.user.id });
@@ -171,10 +150,7 @@ export const getUserPosts = async (
 
 export const getPost = async (req: Request, res: Response) => {
   try {
-    const post = await Post.findById(req.params.id).populate(
-      "author",
-      "username"
-    );
+    const post = await Post.findById(req.params.id).populate("author", "username");
     if (!post) {
       res.status(404).json({ error: "Post not found" });
       return;

@@ -9,32 +9,32 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 export default function Home() {
-const [posts, setPosts] = useState<Post[]>([]);
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState<string | null>(null);
-const [currentPage, setCurrentPage] = useState(1);
-const [totalPages, setTotalPages] = useState(0);
-const { isAuthenticated } = useAuth();
-const navigate = useNavigate();
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
 
-const fetchPosts = async (page: number) => {
-    setLoading(true);
-    setError(null);
-    try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/post`, {
-            params: { page, limit: 6 },
-            withCredentials: true,
-        });
-        setPosts(res.data.posts);
-        setCurrentPage(res.data.currentPage);
-        setTotalPages(res.data.totalPages);
-        if (res.data.posts.length > 0) toast.success("Posts fetched successfully");
-    } catch (err) {
-        if (err instanceof AxiosError) {
-            setError("Failed to fetch posts");
-            toast.error("Failed to fetch posts");
-        }
-    } finally {
+    const fetchPosts = async (page: number) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/post`, {
+                params: { page, limit: 6 },
+                withCredentials: true,
+            });
+            setPosts(res.data.posts);
+            setCurrentPage(res.data.currentPage);
+            setTotalPages(res.data.totalPages);
+            if (res.data.posts.length > 0) toast.success("Posts fetched successfully");
+        } catch (err) {
+            if (err instanceof AxiosError) {
+                setError("Failed to fetch posts");
+                toast.error("Failed to fetch posts");
+            }
+        } finally {
             setLoading(false);
         }
     };

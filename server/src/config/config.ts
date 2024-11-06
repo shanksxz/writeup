@@ -1,5 +1,5 @@
-import { z } from "zod";
 import dotenv from "dotenv";
+import { z } from "zod";
 
 dotenv.config({
   path: ".env",
@@ -24,4 +24,3 @@ export const CLOUDINARY_CLOUD_NAME = envVars.CLOUDINARY_CLOUD_NAME;
 export const CLOUDINARY_API_KEY = envVars.CLOUDINARY_API_KEY;
 export const CLOUDINARY_API_SECRET = envVars.CLOUDINARY_API_SECRET;
 export const ALLOWED_ORIGINS = envVars.ALLOWED_ORIGINS.split(",");
-
