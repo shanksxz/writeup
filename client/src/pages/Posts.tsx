@@ -26,13 +26,14 @@ const postSchema = z.object({
     content: z.string().min(10, "Content must be at least 10 characters long"),
     category: z.enum(["technology", "lifestyle", "travel", "food"]),
     image: z
-        .instanceof(File)
-        .refine((file) => file.size <= 5000000, "File size should be less than 5MB")
-        .refine(
-            (file) => ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type),
-            "Only .jpg, .jpeg, .png and .webp formats are supported.",
-        )
-        .optional(),
+        .custom<FileList>()
+        .transform((file) => file.length > 0 && file.item(0))
+        .refine((file) => !file || (!!file && file.size <= 10 * 1024 * 1024), {
+            message: "The profile picture must be a maximum of 10MB.",
+        })
+        .refine((file) => !file || (!!file && file.type?.startsWith("image")), {
+            message: "Only images are allowed to be sent.",
+        }),
 });
 
 type PostForm = z.infer<typeof postSchema>;
@@ -48,10 +49,10 @@ export default function CreatePost(): React.ReactElement {
         formState: { errors },
         watch,
     } = useForm<PostForm>({
-        // resolver: zodResolver(postSchema),
+        resolver: zodResolver(postSchema),
     });
 
-    // @ts-ignore
+    //@ts-ignore
     const watchImage = watch("image") as FileList;
 
     useEffect(() => {
@@ -73,8 +74,8 @@ export default function CreatePost(): React.ReactElement {
             formData.append("title", data.title);
             formData.append("content", data.content);
             formData.append("category", data.category);
-            if (data.image) {
-                formData.append("image", data.image);
+            if (data.image && data.image instanceof FileList && data.image.length > 0) {
+                formData.append("image", data.image[0]);
             }
 
             const response = await axios.post<Post>(
