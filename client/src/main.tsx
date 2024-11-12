@@ -1,8 +1,11 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import Login from "./components/Login.jsx";
+import Protected from "./components/Protected.js";
 import Signup from "./components/Signup.jsx";
 import { AuthProvider } from "./context/useAuth.jsx";
 import { ThemeProvider } from "./context/useTheme.jsx";
@@ -10,9 +13,6 @@ import MyPosts from "./pages/MyPosts.jsx";
 import PostId from "./pages/PostId.jsx";
 import Posts from "./pages/Posts.jsx";
 import Profile from "./pages/Profile.jsx";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import Protected from "./components/Protected.js";
 
 const router = createBrowserRouter([
     {
@@ -29,31 +29,35 @@ const router = createBrowserRouter([
     },
     {
         path: "/create/post",
-        element:
-            <Protected fallBack={<Login />} >
+        element: (
+            <Protected fallBack={<Login />}>
                 <Posts />
             </Protected>
+        ),
     },
     {
         path: "/user/post",
-        element: 
-            <Protected fallBack={<Login />} >
+        element: (
+            <Protected fallBack={<Login />}>
                 <MyPosts />
             </Protected>
+        ),
     },
     {
         path: "/post/:id",
-        element: 
-            <Protected fallBack={<Login />} >
+        element: (
+            <Protected fallBack={<Login />}>
                 <PostId />
             </Protected>
+        ),
     },
     {
         path: "/profile",
-        element: 
-            <Protected fallBack={<Login />} >
+        element: (
+            <Protected fallBack={<Login />}>
                 <Profile />
             </Protected>
+        ),
     },
     {
         path: "*",
@@ -71,5 +75,5 @@ createRoot(document.getElementById("root")!).render(
                 <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
             </ThemeProvider>
         </AuthProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
 );

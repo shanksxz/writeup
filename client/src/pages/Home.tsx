@@ -1,22 +1,15 @@
 import BlogCard from "@/components/BlogCard";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { POSTS_PER_PAGE, getPosts } from "@/helper";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { getPosts } from "@/helper";
-
 
 export default function Home() {
     const [currentPage, setCurrentPage] = useState(1);
-    const POSTS_PER_PAGE = 6;
-    const {
-        data,
-        isLoading,
-        isError,
-        error
-    } = useQuery({
-        queryKey: ['posts', currentPage],
+    const { data, isLoading, isError, error } = useQuery({
+        queryKey: ["posts", currentPage],
         queryFn: () => getPosts(currentPage, POSTS_PER_PAGE),
     });
 

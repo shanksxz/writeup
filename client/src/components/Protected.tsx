@@ -1,11 +1,11 @@
-import { useAuth } from "@/context/useAuth"
+import { useAuth } from "@/context/useAuth";
 
 export default function Protected({
     children,
-    fallBack
-} : {
-    children : React.ReactNode
-    fallBack : React.ReactNode
+    fallBack,
+}: {
+    children: React.ReactNode;
+    fallBack: React.ReactNode;
 }) {
     const { isAuthenticated } = useAuth();
 

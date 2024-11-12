@@ -12,13 +12,13 @@ import {
 } from "@/components/ui/select";
 import type { Post } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import axios, { type AxiosError } from "axios";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
 import * as z from "zod";
 
 const postSchema = z.object({
@@ -48,7 +48,7 @@ export default function CreatePost(): React.ReactElement {
         formState: { errors },
         watch,
     } = useForm<PostForm>({
-        resolver: zodResolver(postSchema),
+        // resolver: zodResolver(postSchema),
     });
 
     // @ts-ignore
@@ -77,12 +77,16 @@ export default function CreatePost(): React.ReactElement {
                 formData.append("image", data.image);
             }
 
-            const response = await axios.post<Post>(`${import.meta.env.VITE_API_URL}/post/create`, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
+            const response = await axios.post<Post>(
+                `${import.meta.env.VITE_API_URL}/post/create`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                    withCredentials: true,
                 },
-                withCredentials: true,
-            });
+            );
             return response.data;
         },
         onSuccess: () => {
@@ -92,6 +96,7 @@ export default function CreatePost(): React.ReactElement {
             }, 2000);
         },
         onError: (error: unknown) => {
+            console.error(error);
             if (axios.isAxiosError(error)) {
                 const axiosError = error as AxiosError<{ message: string }>;
                 toast.error(axiosError.response?.data?.message || "Error creating post");

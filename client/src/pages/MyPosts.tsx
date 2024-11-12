@@ -40,8 +40,12 @@ export default function BlogPostManager() {
         },
     });
 
-    const { data, isLoading, refetch: fetchPosts } = useQuery({
-        queryKey: ['posts', currentPage, searchTerm],
+    const {
+        data,
+        isLoading,
+        refetch: fetchPosts,
+    } = useQuery({
+        queryKey: ["posts", currentPage, searchTerm],
         queryFn: () => getCurrentUserPosts(currentPage, POSTS_PER_PAGE),
     });
 
@@ -251,11 +255,7 @@ export default function BlogPostManager() {
                         <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
                             Cancel
                         </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={handleDelete}
-                            disabled={isDeleting}
-                        >
+                        <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
                             {isDeleting ? "Deleting..." : "Delete"}
                         </Button>
                     </DialogFooter>
