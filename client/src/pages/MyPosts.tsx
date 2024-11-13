@@ -28,7 +28,7 @@ export default function BlogPostManager() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [postToDelete, setPostToDelete] = useState<string>();
-    const [postToEdit, setPostToEdit] = useState<Post | null>();
+    const [postToEdit, setPostToEdit] = useState<Post["post"] | null>();
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
     const POSTS_PER_PAGE = 2;
@@ -109,7 +109,7 @@ export default function BlogPostManager() {
         setIsDeleteDialogOpen(true);
     };
 
-    const openEditDialog = (post: Post) => {
+    const openEditDialog = (post: Post["post"]) => {
         setPostToEdit(post);
         setValue("title", post.title);
         setValue("content", post.content);

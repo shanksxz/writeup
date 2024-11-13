@@ -14,7 +14,7 @@ import type { Post } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import axios, { type AxiosError } from "axios";
-import type React from "react";
+import { ImagePlus, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -26,19 +26,18 @@ const postSchema = z.object({
     content: z.string().min(10, "Content must be at least 10 characters long"),
     category: z.enum(["technology", "lifestyle", "travel", "food"]),
     image: z
-        .custom<FileList>()
-        .transform((file) => file.length > 0 && file.item(0))
-        .refine((file) => !file || (!!file && file.size <= 10 * 1024 * 1024), {
-            message: "The profile picture must be a maximum of 10MB.",
+        .any()
+        .refine((file) => file?.[0]?.size <= 5000000, {
+            message: "Image size must be less than 5MB",
         })
-        .refine((file) => !file || (!!file && file.type?.startsWith("image")), {
-            message: "Only images are allowed to be sent.",
+        .refine((file) => ["image/jpeg", "image/png"].includes(file?.[0]?.type), {
+            message: "Image must be either JPEG or PNG",
         }),
 });
 
 type PostForm = z.infer<typeof postSchema>;
 
-export default function CreatePost(): React.ReactElement {
+export default function CreatePost() {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const navigate = useNavigate();
 
@@ -52,7 +51,6 @@ export default function CreatePost(): React.ReactElement {
         resolver: zodResolver(postSchema),
     });
 
-    //@ts-ignore
     const watchImage = watch("image") as FileList;
 
     useEffect(() => {
@@ -113,74 +111,129 @@ export default function CreatePost(): React.ReactElement {
 
     return (
         <Layout>
-            <div className="px-4 md:px-6 max-w-2xl mt-2">
-                <h1 className="text-2xl font-bold mb-4">Create New Blog Post</h1>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    <div>
-                        <Label htmlFor="title">Title</Label>
-                        <Input id="title" {...register("title")} placeholder="Enter post title" />
-                        {errors.title && <p className="text-red-500">{errors.title.message}</p>}
+            <div className="container max-w-4xl mx-auto px-4 py-8">
+                <div className="mb-5">
+                    <h2 className="text-3xl font-bold tracking-tight">Create New Blog Post</h2>
+                    <p className="text-muted-foreground mt-2">
+                        Craft your ideas and share them with the world
+                    </p>
+                </div>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="space-y-2">
+                        <Label htmlFor="title" className="text-lg font-medium">
+                            Title
+                        </Label>
+                        <Input
+                            id="title"
+                            {...register("title")}
+                            placeholder="Enter an engaging title for your post"
+                        />
+                        {errors.title && (
+                            <p className="text-destructive text-sm">{errors.title.message}</p>
+                        )}
                     </div>
-                    <div>
-                        <Label htmlFor="content">Content</Label>
+                    <div className="space-y-2">
+                        <Label htmlFor="content" className="text-lg font-medium">
+                            Content
+                        </Label>
                         <Controller
                             name="content"
                             control={control}
                             render={({ field }) => (
-                                <Tiptap content={field.value} onChange={field.onChange} />
+                                <div className="border rounded-md overflow-hidden">
+                                    <Tiptap content={field.value} onChange={field.onChange} />
+                                </div>
                             )}
                         />
-                        {errors.content && <p className="text-red-500">{errors.content.message}</p>}
-                    </div>
-                    <div>
-                        <Label htmlFor="category">Category</Label>
-                        <Controller
-                            name="category"
-                            control={control}
-                            render={({ field }) => (
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a category" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="technology">Technology</SelectItem>
-                                        <SelectItem value="lifestyle">Lifestyle</SelectItem>
-                                        <SelectItem value="travel">Travel</SelectItem>
-                                        <SelectItem value="food">Food</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        />
-                        {errors.category && (
-                            <p className="text-red-500">{errors.category.message}</p>
+                        {errors.content && (
+                            <p className="text-destructive text-sm">{errors.content.message}</p>
                         )}
                     </div>
-                    <div>
-                        <Label htmlFor="image">Cover Image</Label>
-                        <Input
-                            id="image"
-                            type="file"
-                            accept="image/*"
-                            {...register("image")}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                    register("image").onChange(e);
-                                }
-                            }}
-                        />
-                        {errors.image && <p className="text-red-500">{errors.image.message}</p>}
-                        {previewUrl && (
-                            <img
-                                src={previewUrl}
-                                alt="Preview"
-                                className="mt-2 max-w-full h-auto"
+
+                    <div className="grid gap-6 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="category" className="text-lg font-medium">
+                                Category
+                            </Label>
+                            <Controller
+                                name="category"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="technology">Technology</SelectItem>
+                                            <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                                            <SelectItem value="travel">Travel</SelectItem>
+                                            <SelectItem value="food">Food</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
                             />
-                        )}
+                            {errors.category && (
+                                <p className="text-destructive text-sm">
+                                    {errors.category.message}
+                                </p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="image" className="text-lg font-medium">
+                                Cover Image
+                            </Label>
+                            <div className="flex items-center gap-4">
+                                <Input
+                                    id="image"
+                                    type="file"
+                                    accept="image/*"
+                                    {...register("image")}
+                                    className="w-full file:bg-transparent file:border-0 file:text-sm file:font-medium hover:file:text-primary cursor-pointer"
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            register("image").onChange(e);
+                                        }
+                                    }}
+                                />
+                            </div>
+                            {errors.image && (
+                                <p className="text-destructive text-sm">
+                                    {errors.image.message as string}
+                                </p>
+                            )}
+                        </div>
                     </div>
-                    <Button type="submit" disabled={status === "pending"} className="w-full">
-                        {status === "pending" ? "Publishing..." : "Publish Post"}
-                    </Button>
+                    {!previewUrl && (
+                        <div className="w-full h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                            <ImagePlus className="w-8 h-8 text-gray-400" />
+                        </div>
+                    )}
+                    {previewUrl && (
+                        <img
+                            src={previewUrl}
+                            alt="Preview"
+                            className="mt-2 max-w-full h-auto rounded-lg shadow-md"
+                        />
+                    )}
+                    <div className="flex justify-end space-x-4 pt-4">
+                        <Button type="button" variant="outline">
+                            Save Draft
+                        </Button>
+                        <Button type="submit" disabled={status === "pending"}>
+                            {status === "pending" ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Publishing...
+                                </>
+                            ) : (
+                                "Publish Post"
+                            )}
+                        </Button>
+                    </div>
                 </form>
             </div>
         </Layout>

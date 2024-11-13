@@ -1,8 +1,8 @@
-import type { Post } from "@/types";
+import type { Post, PostComments } from "@/types";
 import axios from "axios";
 
 type PostResponse = {
-    posts: Post[];
+    posts: Post["post"][];
     totalPages: number;
     currentPage: number;
     totalPosts: number;
@@ -29,11 +29,11 @@ export async function getCurrentUserPosts(page: number, limit: number): Promise<
     return res.data;
 }
 
-export async function getPostById(id: string): Promise<Post> {
+export async function getPostById(id: string): Promise<Post & { likeStatus: "unliked" | "liked" }> {
     const res = await axios.get(`${import.meta.env.VITE_API_URL}/post/${id}`, {
         withCredentials: true,
     });
-    return res.data.post;
+    return res.data;
 }
 
 // not used
@@ -50,6 +50,39 @@ export async function updatePost(id: string, title: string, content: string): Pr
             title,
             content,
         },
+        {
+            withCredentials: true,
+        },
+    );
+    return res.data;
+}
+
+export async function createComment(postId: string, content: string): Promise<PostComments> {
+    const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/${postId}/comment`,
+        { content },
+        {
+            withCredentials: true,
+        },
+    );
+    return res.data.post;
+}
+
+export async function getAllComments(postId: string): Promise<PostComments[]> {
+    const res = await axios.get(`${import.meta.env.VITE_API_URL}/${postId}/comment`, {
+        withCredentials: true,
+    });
+    return res.data.comments;
+}
+
+export async function likePost(postId: string): Promise<
+    Post & {
+        likeStatus: "liked" | "unliked";
+    }
+> {
+    const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/post/${postId}/like`,
+        {},
         {
             withCredentials: true,
         },

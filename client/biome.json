@@ -26,6 +26,9 @@
             "security": {
                 "noDangerouslySetInnerHtml": "off",
                 "noDangerouslySetInnerHtmlWithChildren": "off"
+            },
+            "a11y" : {
+                "useButtonType": "off"
             }
         }
     },
