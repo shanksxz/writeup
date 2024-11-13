@@ -12,14 +12,23 @@ const commentSchema = new mongoose.Schema({
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: [true, "Author is required"],
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-  likes: {
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  likeCount: {
     type: Number,
     default: 0,
+  },
+  likes: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: "User",
   },
 });
 

@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import mongoose from "mongoose";
 import { z } from "zod";
 import { uploadOnCloudinary } from "../config/cloudinary";
 import { Post } from "../models";
@@ -7,6 +8,8 @@ import { postSchema, type postSchemaType } from "../validators";
 
 export const createPost = async (req: Request, res: Response) => {
   try {
+    console.log(req.body);
+    console.log(req.file);
     const { title, content } = postSchema.parse(req.body);
     const author = req.user.id;
     let imageUrl = null;
@@ -155,8 +158,46 @@ export const getPost = async (req: Request, res: Response) => {
       res.status(404).json({ error: "Post not found" });
       return;
     }
-    res.status(200).json({ post });
+
+    const postLikedByUser = post.likes.map((like) => like.toString());
+    const isCurrentUserLikePost = postLikedByUser.includes(req.user.id);
+
+    res.status(200).json({
+      post,
+      likeStatus: isCurrentUserLikePost ? "liked" : "unliked",
+    });
   } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const likePost = async (req: Request, res: Response) => {
+  try {
+    const { postId } = req.params;
+    const post = await Post.findById(postId).populate("likes");
+    if (!post) {
+      res.status(404).json({ error: "Post not found" });
+      return;
+    }
+
+    const postLikedByUser = post.likes.map((like) => like._id.toString());
+    if (!postLikedByUser.includes(req.user.id)) {
+      post.likes.push(new mongoose.Types.ObjectId(req.user.id));
+      post.likeCount += 1;
+      await post.save();
+    } else {
+      const index = post.likes.indexOf(new mongoose.Types.ObjectId(req.user.id));
+      post.likes.splice(index, 1);
+      post.likeCount = post.likes.length;
+      await post.save();
+    }
+
+    res.status(200).json({
+      post,
+      messsage: "Post liked successfully",
+    });
+  } catch (error: any) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 };

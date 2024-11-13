@@ -2,6 +2,7 @@ import express, { type Request, type Response, type NextFunction } from "express
 import { ALLOWED_ORIGINS, PORT } from "./config/config";
 import { dbconnect } from "./config/db";
 import logger from "./config/logger";
+import commentRouter from "./routes/comments";
 import postRoutes from "./routes/posts";
 import userRoutes from "./routes/user";
 import ApiError from "./utils/apiError";
@@ -34,6 +35,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api", userRoutes);
 app.use("/api", postRoutes);
+app.use("/api", commentRouter);
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   next(new ApiError(404, `Can't find ${req.originalUrl} on this server!`));

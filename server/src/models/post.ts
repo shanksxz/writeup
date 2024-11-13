@@ -21,11 +21,6 @@ const postSchema = new mongoose.Schema({
     type: String,
     required: [true, "Image is required"],
   },
-  //? might add tags later
-  // tags : {
-  //     type : mongoose.Schema.Types.ObjectId,
-  //     ref : 'Tag'
-  // },
   createdAt: {
     type: Date,
     default: Date.now,
@@ -33,6 +28,31 @@ const postSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now,
+  },
+  views: {
+    type: Number,
+    default: 0,
+  },
+  status: {
+    type: String,
+    enum: ["draft", "published", "archived"],
+    default: "draft",
+  },
+  likeCount: {
+    type: Number,
+    default: 0,
+  },
+  likes: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: "User",
+  },
+  comments: {
+    type: [mongoose.Schema.Types.ObjectId],
+    ref: "Comment",
+  },
+  commentsCount: {
+    type: Number,
+    default: 0,
   },
 });
 
