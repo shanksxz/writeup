@@ -1,4 +1,4 @@
-import type { Post, PostComments } from "@/types";
+import type { LoginForm, Post, PostComments, SignupForm } from "@/types";
 import axios from "axios";
 
 type PostResponse = {
@@ -88,4 +88,16 @@ export async function likePost(postId: string): Promise<
         },
     );
     return res.data;
+}
+
+export async function loginUser(data: LoginForm) {
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/signin`, data, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function signUpUser(data: SignupForm) {
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/signup`, data);
+    return response.data;
 }

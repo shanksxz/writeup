@@ -1,23 +1,17 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import axios, { AxiosError } from "axios";
-import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
-import * as z from "zod";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/useAuth";
+import { loginUser } from "@/helper";
+import { type LoginForm, loginSchema } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { useEffect } from "react";
-import { toast } from "sonner";
-
-const loginSchema = z.object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(1, "Password is required"),
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import { Toaster, toast } from "sonner";
 
 export default function Login() {
     const {
@@ -35,22 +29,28 @@ export default function Login() {
         if (user) {
             navigate("/");
         }
-    }, [navigate]);
+    }, [user, navigate]);
 
-    const onSubmit = async (data: LoginForm) => {
-        try {
-            const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/signin`, data, {
-                withCredentials: true,
-            });
-            setUser(res.data.user);
+    const { mutate, isPending } = useMutation({
+        mutationFn: loginUser,
+        onSuccess: (data) => {
+            setUser(data.user);
             toast.success("Login successful, redirecting.....");
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            navigate("/");
-        } catch (error) {
+            setTimeout(() => {
+                navigate("/");
+            }, 2000);
+        },
+        onError: (error: Error) => {
             if (error instanceof AxiosError) {
-                toast.error("Failed to login");
+                toast.error(error.response?.data?.message || "Login failed");
+            } else {
+                toast.error("An unexpected error occurred");
             }
-        }
+        },
+    });
+
+    const onSubmit = (data: LoginForm) => {
+        mutate(data);
     };
 
     return (
@@ -91,8 +91,8 @@ export default function Login() {
                                     </p>
                                 )}
                             </div>
-                            <Button type="submit" className="w-full">
-                                Login
+                            <Button type="submit" className="w-full" disabled={isPending}>
+                                {isPending ? "Logging in..." : "Login"}
                             </Button>
                         </div>
                         <div className="mt-4 text-center text-sm">
@@ -101,6 +101,7 @@ export default function Login() {
                     </CardContent>
                 </form>
             </Card>
+            <Toaster />
         </section>
     );
 }

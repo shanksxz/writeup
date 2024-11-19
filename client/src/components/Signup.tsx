@@ -2,24 +2,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { signUpUser } from "@/helper";
+import { type SignupForm, signupSchema } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
+import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import * as z from "zod";
-
-const signupSchema = z.object({
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
-    username: z.string().min(3, "Username must be at least 3 characters long"),
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(6, "Password must be at least 6 characters long"),
-});
-
-type SignupForm = z.infer<typeof signupSchema>;
 
 export default function Signup() {
+    const navigate = useNavigate();
+
     const {
         register,
         handleSubmit,
@@ -28,17 +21,21 @@ export default function Signup() {
         resolver: zodResolver(signupSchema),
     });
 
-    const navigate = useNavigate();
-
-    const onSubmit = async (data: SignupForm) => {
-        try {
-            await axios.post(`${import.meta.env.VITE_API_URL}/auth/signup`, data);
+    const { mutate, isPending } = useMutation({
+        mutationFn: signUpUser,
+        onSuccess: () => {
             toast.success("Account created successfully, redirecting.....");
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            navigate("/auth/login");
-        } catch (_error) {
+            setTimeout(() => {
+                navigate("/auth/login");
+            }, 2000);
+        },
+        onError: (_error) => {
             toast.error("An error occurred, please try again");
-        }
+        },
+    });
+
+    const onSubmit = (data: SignupForm) => {
+        mutate(data);
     };
 
     return (
@@ -115,8 +112,8 @@ export default function Signup() {
                                     </p>
                                 )}
                             </div>
-                            <Button type="submit" className="w-full">
-                                Create an account
+                            <Button type="submit" className="w-full" disabled={isPending}>
+                                {isPending ? "Creating Account..." : "Create an account"}
                             </Button>
                         </div>
                         <div className="mt-4 text-center text-sm">

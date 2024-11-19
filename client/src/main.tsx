@@ -4,14 +4,15 @@ import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { Toaster } from "sonner";
 import Login from "./components/Login.jsx";
 import Protected from "./components/Protected.js";
 import Signup from "./components/Signup.jsx";
 import { AuthProvider } from "./context/useAuth.jsx";
 import { ThemeProvider } from "./context/useTheme.jsx";
+import CreatePost from "./pages/CreatePost.jsx";
 import MyPosts from "./pages/MyPosts.jsx";
-import PostId from "./pages/PostId.jsx";
-import Posts from "./pages/Posts.jsx";
+import PostById from "./pages/PostById.js";
 import Profile from "./pages/Profile.jsx";
 
 const router = createBrowserRouter([
@@ -31,7 +32,7 @@ const router = createBrowserRouter([
         path: "/create/post",
         element: (
             <Protected fallBack={<Login />}>
-                <Posts />
+                <CreatePost />
             </Protected>
         ),
     },
@@ -47,7 +48,7 @@ const router = createBrowserRouter([
         path: "/post/:id",
         element: (
             <Protected fallBack={<Login />}>
-                <PostId />
+                <PostById />
             </Protected>
         ),
     },
@@ -71,6 +72,7 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
         <AuthProvider>
             <ThemeProvider>
+                <Toaster />
                 <RouterProvider router={router} />
                 <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
             </ThemeProvider>
