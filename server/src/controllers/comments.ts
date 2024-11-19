@@ -24,7 +24,7 @@ export async function createComment(req: Request, res: Response) {
     });
 
     post.comments.push(newComment._id);
-    post.commentsCount += post.comments.length;
+    post.commentsCount += 1;
     await post.save();
 
     res.status(201).json({
