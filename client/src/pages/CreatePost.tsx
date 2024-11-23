@@ -111,7 +111,7 @@ export default function CreatePost() {
 
     return (
         <Layout>
-            <div className="container max-w-4xl mx-auto px-4 py-8">
+            <div className="w-full mx-auto px-4 py-8">
                 <div className="mb-5">
                     <h2 className="text-3xl font-bold tracking-tight">Create New Blog Post</h2>
                     <p className="text-muted-foreground mt-2">

@@ -140,7 +140,7 @@ export default function BlogPostManager() {
 
     return (
         <Layout>
-            <div className="container mx-auto px-4 md:px-6 py-4 md:py-8">
+            <div className="px-4 md:px-6 py-4 md:py-8">
                 <header className="mb-4 md:mb-8">
                     <h1 className="text-2xl md:text-3xl font-bold mb-4">My Blog Posts</h1>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

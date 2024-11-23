@@ -125,7 +125,7 @@ export default function PostById() {
 
     return (
         <Layout>
-            <div className="container mx-auto px-4 md:px-6 py-8">
+            <div className="px-4 md:px-6 py-8">
                 <Button
                     variant="link"
                     onClick={() => navigate(-1)}

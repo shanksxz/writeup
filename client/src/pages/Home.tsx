@@ -1,5 +1,7 @@
 import BlogCard from "@/components/BlogCard";
+import FeaturedPost from "@/components/FeaturedPost";
 import Layout from "@/components/Layout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { POSTS_PER_PAGE, getPosts } from "@/helper";
 import { useQuery } from "@tanstack/react-query";
@@ -19,28 +21,59 @@ export default function Home() {
         }
     };
 
+    const featuredPost = data?.posts[0];
+    const recentPosts = data?.posts.slice(1);
+    const hasNoPosts = !isLoading && !isError && (!data?.posts || data.posts.length === 0);
+    const hasOnlyOnePost = !isLoading && !isError && data?.posts?.length === 1;
+
     return (
         <Layout>
-            <div className="flex flex-col min-h-screen">
-                <div className="flex-grow">
-                    {isLoading && (
-                        <div className="flex justify-center items-center h-64">
-                            <Loader2 className="h-8 w-8 animate-spin" />
-                        </div>
-                    )}
-                    {isError && (
-                        <div className="text-red-500 text-center my-4">
+            <div className="flex flex-col min-h-screen space-y-8 py-8">
+                {isLoading && (
+                    <div className="flex justify-center items-center h-64">
+                        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    </div>
+                )}
+
+                {isError && (
+                    <div className="text-red-500 text-center my-8 p-4 bg-red-100/10 rounded-lg border border-red-500/20">
+                        <p className="text-lg font-semibold">Oops! Something went wrong.</p>
+                        <p className="text-sm mt-2">
                             {error instanceof Error ? error.message : "Failed to fetch posts"}
-                        </div>
-                    )}
-                    {!isLoading && !isError && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-7 px-4 md:px-6 mt-5 mb-3">
-                            {data?.posts.map((post) => (
-                                <BlogCard key={post._id} post={post} />
-                            ))}
-                        </div>
-                    )}
-                </div>
+                        </p>
+                    </div>
+                )}
+
+                {hasNoPosts && (
+                    <Alert className="max-w-2xl mx-auto">
+                        <AlertDescription>
+                            No posts found. Check back later for new content!
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                {!isLoading && !isError && featuredPost && (
+                    <>
+                        <section>
+                            <h2 className="text-2xl font-semibold mb-4">
+                                {hasOnlyOnePost ? "Latest Post" : "Featured"}
+                            </h2>
+                            <FeaturedPost post={featuredPost} />
+                        </section>
+
+                        {!hasOnlyOnePost && recentPosts && recentPosts.length > 0 && (
+                            <section>
+                                <h2 className="text-2xl font-semibold mb-4">Recent Posts</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {recentPosts.map((post) => (
+                                        <BlogCard key={post._id} post={post} />
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+                    </>
+                )}
+
                 {!isLoading && !isError && data?.totalPages && data?.totalPages > 1 && (
                     <div className="sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t py-4">
                         <div className="container flex justify-center items-center space-x-4">

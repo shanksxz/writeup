@@ -1,27 +1,23 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import type { BlogCardProps } from "@/types";
-import calculateReadingTime from "@/utils";
-import { CalendarIcon, ClockIcon } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export default function BlogCard({ post }: { post: BlogCardProps }) {
-    const readingTime = calculateReadingTime(post.content, 0);
-
+export default function FeaturedPost({ post }: { post: BlogCardProps }) {
     return (
-        <Card className="overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-lg">
+        <div className="relative group rounded-3xl border bg-card overflow-hidden transition-all">
             {post.image && (
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-[400px] overflow-hidden">
                     <img
                         src={post.image}
                         alt={post.title}
-                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background to-background/20" />
                 </div>
             )}
-            <CardHeader className="p-4">
-                <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+            <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                     <div className="flex items-center space-x-2">
                         <CalendarIcon className="h-4 w-4" />
                         <time dateTime={post.createdAt}>
@@ -32,24 +28,16 @@ export default function BlogCard({ post }: { post: BlogCardProps }) {
                             })}
                         </time>
                     </div>
-                    <Badge variant="secondary" className="flex items-center space-x-1">
-                        <ClockIcon className="h-3 w-3" />
-                        <span>{readingTime.text}</span>
-                    </Badge>
                 </div>
                 <Link
                     to={`/post/${post._id}`}
-                    className="text-xl font-semibold hover:text-primary transition-colors duration-200"
+                    className="block group-hover:text-primary transition-colors"
                 >
-                    {post.title}
+                    <h3 className="text-2xl font-bold mb-2">{post.title}</h3>
+                    <p className="text-muted-foreground line-clamp-2">{post.content}</p>
                 </Link>
-            </CardHeader>
-            <CardContent className="p-4">
-                <p className="text-muted-foreground line-clamp-3">{post.content}</p>
-            </CardContent>
-            {post.author && (
-                <CardFooter className="p-4 bg-muted/50">
-                    <div className="flex items-center space-x-3">
+                {post.author && (
+                    <div className="flex items-center space-x-3 mt-4">
                         <Avatar className="h-10 w-10">
                             <AvatarImage
                                 src={`https://avatar.vercel.sh/${post.author.username}`}
@@ -62,8 +50,8 @@ export default function BlogCard({ post }: { post: BlogCardProps }) {
                             <p className="text-xs text-muted-foreground">Author</p>
                         </div>
                     </div>
-                </CardFooter>
-            )}
-        </Card>
+                )}
+            </div>
+        </div>
     );
 }
