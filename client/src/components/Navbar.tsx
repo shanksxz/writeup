@@ -20,7 +20,7 @@ export default function Navbar() {
 
     const handleLogout = async () => {
         try {
-            await axios.get(`${import.meta.env.VITE_API_URL}/auth/signout`, {
+            await axios.post(`${import.meta.env.VITE_API_URL}/auth/signout`, {
                 withCredentials: true,
             });
             toast.success("Logged out successfully");
