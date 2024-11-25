@@ -36,15 +36,12 @@ export const signup = async (req: Request, res: Response<AuthResponse>) => {
   try {
     const { firstName, lastName, username, email, password } = userSchema.parse(req.body);
 
-    const existingUser = await User.findOne({ 
-      $or: [{ email }, { username }] 
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
     });
-    
+
     if (existingUser) {
-      throw new ApiError(
-        400, 
-        `User already exists with this ${existingUser.email === email ? 'email' : 'username'}`
-      );
+      throw new ApiError(400, `User already exists with this ${existingUser.email === email ? "email" : "username"}`);
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -65,29 +62,29 @@ export const signup = async (req: Request, res: Response<AuthResponse>) => {
       lastName: user.lastName,
       username: user.username,
       email: user.email,
-      role: user.role
+      role: user.role,
     };
 
-    res.status(201).json({ 
+    res.status(201).json({
       success: true,
       message: "User created successfully",
-      user: userResponse 
+      user: userResponse,
     });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ 
+      res.status(400).json({
         success: false,
-        error: error.errors 
+        error: error.errors,
       });
     } else if (error instanceof ApiError) {
-      res.status(error.statusCode).json({ 
+      res.status(error.statusCode).json({
         success: false,
-        error: error.message 
+        error: error.message,
       });
     } else {
-      res.status(500).json({ 
+      res.status(500).json({
         success: false,
-        error: error.message 
+        error: error.message,
       });
     }
   }
@@ -116,12 +113,12 @@ export const signin = async (req: Request, res: Response) => {
       lastName: user.lastName,
       username: user.username,
       email: user.email,
-      role: user.role
+      role: user.role,
     };
 
-    res.status(200).json({ 
+    res.status(200).json({
       success: true,
-      user: userResponse 
+      user: userResponse,
     });
   } catch (error: any) {
     if (error instanceof z.ZodError) {

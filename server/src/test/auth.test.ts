@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import request from "supertest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { app } from "../app";
 import { User } from "../models";
 
@@ -14,9 +14,7 @@ describe("Authentication", () => {
 
   describe("POST /api/auth/signup", () => {
     it("should register a new user successfully", async () => {
-      const response = await request(app)
-        .post("/api/auth/signup")
-        .send(userPayload);
+      const response = await request(app).post("/api/auth/signup").send(userPayload);
 
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
@@ -29,9 +27,7 @@ describe("Authentication", () => {
     it("should not register user with existing email", async () => {
       await User.create(userPayload);
 
-      const response = await request(app)
-        .post("/api/auth/signup")
-        .send(userPayload);
+      const response = await request(app).post("/api/auth/signup").send(userPayload);
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
@@ -103,17 +99,13 @@ describe("Authentication", () => {
     beforeEach(async () => {
       await request(app).post("/api/auth/signup").send(userPayload);
 
-      const signinResponse = await request(app)
-        .post("/api/auth/signin")
-        .send(userPayload);
+      const signinResponse = await request(app).post("/api/auth/signin").send(userPayload);
 
       authCookie = signinResponse.headers["set-cookie"][0];
     });
 
     it("should return user data for authenticated request", async () => {
-      const response = await request(app)
-        .get("/api/auth/me")
-        .set("Cookie", authCookie);
+      const response = await request(app).get("/api/auth/me").set("Cookie", authCookie);
 
       expect(response.status).toBe(200);
       expect(response.body.user).toBeDefined();
@@ -128,9 +120,7 @@ describe("Authentication", () => {
     });
 
     it("should return 401 for invalid token", async () => {
-      const response = await request(app)
-        .get("/api/auth/me")
-        .set("Cookie", ["token=invalid_token"]);
+      const response = await request(app).get("/api/auth/me").set("Cookie", ["token=invalid_token"]);
 
       expect(response.status).toBe(401);
       expect(response.body.error).toBeDefined();
