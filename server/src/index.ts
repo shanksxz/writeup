@@ -1,46 +1,34 @@
-import express, { type Request, type Response, type NextFunction } from "express";
-import { ALLOWED_ORIGINS, PORT } from "./config/config";
+import { app } from "./app";
+import { PORT } from "./config/config";
 import { dbconnect } from "./config/db";
 import logger from "./config/logger";
-import commentRouter from "./routes/comments";
-import postRoutes from "./routes/posts";
-import userRoutes from "./routes/user";
-import ApiError from "./utils/apiError";
 
-import cookieParser from "cookie-parser";
-import cors from "cors";
+// Connect to database only when starting the server (not during tests)
+if (process.env.NODE_ENV !== 'test') {
+  dbconnect()
+    .then(() => {
+      logger.info("Database connected successfully");
+    })
+    .catch((error) => {
+      logger.error("Database connection failed", error);
+      process.exit(1);
+    });
+}
 
-const app = express();
-app.use(express.json());
-app.use(cookieParser());
-
-app.use(
-  cors({
-    origin: ALLOWED_ORIGINS,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-  }),
-);
-
-dbconnect();
-
-app.use((req: Request, res: Response, next: NextFunction) => {
-  logger.info(`${req.method} ${req.url}`);
-  next();
+// Start server
+const server = app.listen(PORT, () => {
+  logger.info(`Server is running on port ${PORT}`);
 });
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello World");
+// Handle unhandled promise rejections
+process.on("unhandledRejection", (err) => {
+  logger.error("UNHANDLED REJECTION! 💥 Shutting down...");
+  logger.error(err);
+  
+  // Close server & exit process
+  server.close(() => {
+    process.exit(1);
+  });
 });
 
-app.use("/api", userRoutes);
-app.use("/api", postRoutes);
-app.use("/api", commentRouter);
-
-app.use((req: Request, res: Response, next: NextFunction) => {
-  next(new ApiError(404, `Can't find ${req.originalUrl} on this server!`));
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+export { server };
