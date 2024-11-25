@@ -11,7 +11,7 @@ type PostResponse = {
 };
 
 export const url = import.meta.env.VITE_API_URL;
-export const POSTS_PER_PAGE = 6;
+export const POSTS_PER_PAGE = 5;
 
 export async function getPosts(page: number, limit: number): Promise<PostResponse> {
     const res = await axios.get(`${url}/post`, {
