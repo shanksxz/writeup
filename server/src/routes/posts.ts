@@ -9,8 +9,6 @@ router.get("/post", getPosts);
 router.get("/post/:id", auth, getPost);
 router.put("/post/:id", auth, upload.single("image"), updatePost);
 router.delete("/post/:id", auth, deletePost);
-// like logic
 router.post("/post/:postId/like", auth, likePost);
-// router.delete("/post/:postId/unlike", auth, likePost);
 
 export default router;

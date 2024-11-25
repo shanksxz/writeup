@@ -3,9 +3,11 @@ import { DATABASE_URL } from "./config";
 
 export const dbconnect = async () => {
   try {
-    await mongoose.connect(DATABASE_URL);
-    console.log("Database connected successfully");
+    //TODO: idk why but DATABASE_URL is the real db url not the in-memory one
+    console.log("Connecting to database:", process.env.DATABASE_URL);
+    await mongoose.connect(process.env.DATABASE_URL!);
   } catch (error) {
-    console.log("Database connection failed");
+    console.error('Database connection error:', error);
+    throw error;
   }
 };

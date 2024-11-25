@@ -7,14 +7,18 @@ import ApiError from "../utils/apiError";
 export const auth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const token = req.cookies.token;
+    console.log("token", token);
     if (!token) {
+      console.log("No token provided");
       throw new ApiError(401, "Unauthorized - No token provided");
     }
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+      console.log("decoded", decoded);
       req.user = decoded;
       next();
     } catch (jwtError) {
+      console.log("jwtError", jwtError);
       if (jwtError instanceof jwt.JsonWebTokenError) {
         throw new ApiError(401, "Unauthorized - Invalid token");
       } else if (jwtError instanceof jwt.TokenExpiredError) {

@@ -25,20 +25,30 @@ const generateToken = (res: Response, userId: string) => {
   });
 };
 
-export const signup = async (req: Request, res: Response) => {
+interface AuthResponse {
+  success: boolean;
+  message?: string;
+  user?: any;
+  error?: any;
+}
+
+export const signup = async (req: Request, res: Response<AuthResponse>) => {
   try {
     const { firstName, lastName, username, email, password } = userSchema.parse(req.body);
 
-    // check if the user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ 
+      $or: [{ email }, { username }] 
+    });
+    
     if (existingUser) {
-      throw new ApiError(400, "User already exists");
+      throw new ApiError(
+        400, 
+        `User already exists with this ${existingUser.email === email ? 'email' : 'username'}`
+      );
     }
 
-    // hash the password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // create the user
     const user = await User.create({
       firstName,
       lastName,
@@ -47,18 +57,38 @@ export const signup = async (req: Request, res: Response) => {
       password: hashedPassword,
     });
 
-    // create the token
-    // const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "7d" });
-    // convert object id to string
-
     generateToken(res, user._id.toString());
 
-    res.status(201).json({ user });
+    const userResponse = {
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      email: user.email,
+      role: user.role
+    };
+
+    res.status(201).json({ 
+      success: true,
+      message: "User created successfully",
+      user: userResponse 
+    });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
+      res.status(400).json({ 
+        success: false,
+        error: error.errors 
+      });
+    } else if (error instanceof ApiError) {
+      res.status(error.statusCode).json({ 
+        success: false,
+        error: error.message 
+      });
     } else {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ 
+        success: false,
+        error: error.message 
+      });
     }
   }
 };
@@ -75,18 +105,29 @@ export const signin = async (req: Request, res: Response) => {
     const user = await User.findOne({ email });
     if (!user) throw new ApiError(404, "User not found");
 
-    // compare the password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new ApiError(400, "Invalid credentials");
 
-    // create the token
     generateToken(res, user._id.toString());
 
-    // send the user as response
-    res.status(200).json({ user });
+    const userResponse = {
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      email: user.email,
+      role: user.role
+    };
+
+    res.status(200).json({ 
+      success: true,
+      user: userResponse 
+    });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.errors });
+    } else if (error instanceof ApiError) {
+      res.status(error.statusCode).json({ error: error.message });
     } else {
       res.status(500).json({ error: error.message });
     }
@@ -98,6 +139,7 @@ export const checkAuth = async (req: Request, res: Response) => {
     const user = await User.findById(req.user.id);
     if (!user) {
       res.status(404).json({ message: "User not found" });
+      return;
     }
 
     res.status(200).json({ user });
