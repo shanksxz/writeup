@@ -1,5 +1,5 @@
 import request from "supertest";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { app } from "../app";
 import { User } from "../models";
 

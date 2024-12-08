@@ -1,6 +1,6 @@
 import express from "express";
-import { checkAuth, signin, signout, signup } from "../controllers/auth";
 import { getUserPosts } from "../controllers/post";
+import { checkAuth, signin, signout, signup } from "../controllers/user";
 import { auth } from "../middlewares/auth";
 const router = express.Router();
 
