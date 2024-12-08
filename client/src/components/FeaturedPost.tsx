@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { BlogCardProps } from "@/types";
+import { stripHtmlAndTruncate } from "@/utils";
 import { CalendarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -34,7 +35,9 @@ export default function FeaturedPost({ post }: { post: BlogCardProps }) {
                     className="block group-hover:text-primary transition-colors"
                 >
                     <h3 className="text-2xl font-bold mb-2">{post.title}</h3>
-                    <p className="text-muted-foreground line-clamp-2">{post.content}</p>
+                    <p className="text-muted-foreground line-clamp-2">
+                        {stripHtmlAndTruncate(post.content)}
+                    </p>
                 </Link>
                 {post.author && (
                     <div className="flex items-center space-x-3 mt-4">

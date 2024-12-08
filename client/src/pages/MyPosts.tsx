@@ -59,6 +59,7 @@ export default function BlogPostManager() {
             toast.success("Post deleted successfully");
             setIsDeleteDialogOpen(false);
             setPostToDelete("");
+            fetchPosts();
         },
         onError: (error: unknown) => {
             if (error instanceof AxiosError) {
@@ -85,6 +86,7 @@ export default function BlogPostManager() {
             setIsEditDialogOpen(false);
             setPostToEdit(null);
             reset();
+            fetchPosts();
         },
         onError: (error: unknown) => {
             if (error instanceof AxiosError) {
@@ -101,7 +103,6 @@ export default function BlogPostManager() {
 
     const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        fetchPosts();
     };
 
     const openDeleteDialog = (postId: string) => {

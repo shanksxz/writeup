@@ -42,7 +42,7 @@ export default function Login() {
         },
         onError: (error: Error) => {
             if (error instanceof AxiosError) {
-                toast.error(error.response?.data?.message || "Login failed");
+                toast.error(error.response?.data?.error || "Login failed");
             } else {
                 toast.error("An unexpected error occurred");
             }

@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import type { BlogCardProps } from "@/types";
-import calculateReadingTime from "@/utils";
+import calculateReadingTime, { stripHtmlAndTruncate } from "@/utils";
 import { CalendarIcon, ClockIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -45,7 +45,9 @@ export default function BlogCard({ post }: { post: BlogCardProps }) {
                 </Link>
             </CardHeader>
             <CardContent className="p-4">
-                <p className="text-muted-foreground line-clamp-3">{post.content}</p>
+                <p className="text-muted-foreground line-clamp-3">
+                    {stripHtmlAndTruncate(post.content)}
+                </p>
             </CardContent>
             {post.author && (
                 <CardFooter className="p-4 bg-muted/50">

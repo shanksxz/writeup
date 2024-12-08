@@ -6,6 +6,7 @@ import { signUpUser } from "@/helper";
 import { type SignupForm, signupSchema } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -30,7 +31,11 @@ export default function Signup() {
             }, 2000);
         },
         onError: (_error) => {
-            toast.error("An error occurred, please try again");
+            if (_error instanceof AxiosError) {
+                toast.error(_error.response?.data?.error || "An error occurred, please try again");
+            } else {
+                toast.error("An unexpected error occurred");
+            }
         },
     });
 
