@@ -1,23 +1,28 @@
 import { z } from "zod";
 
-export type Post = {
-    post: {
+export interface Post {
+    _id: string;
+    title: string;
+    content: string;
+    author: {
         _id: string;
-        title: string;
-        content: string;
-        image: string;
-        createdAt: string;
-        author: {
-            _id: string;
-            username: string;
-        };
-        likes: string[];
-        likeCount: number;
-        commentsCount: number;
-        comments: string[];
+        username: string;
+        firstName?: string;
+        lastName?: string;
     };
-    likeStatus: "liked" | "unliked";
-};
+    categories?: {
+        _id: string;
+        name: string;
+    };
+    image: string;
+    createdAt: string;
+    updatedAt: string;
+    views: number;
+    status: "draft" | "published" | "archived";
+    likeCount: number;
+    likes: string[];
+    commentsCount: number;
+}
 
 export type User = {
     _id: string;
@@ -26,6 +31,9 @@ export type User = {
     username: string;
     email: string;
     createdAt: string;
+    isEmailVerified: boolean;
+    emailVerificationToken: string;
+    emailVerificationTokenExpiry: string;
 };
 
 export type BlogCardProps = {
@@ -65,6 +73,11 @@ export const loginSchema = z.object({
     email: z.string().email("Invalid email address"),
     password: z.string().min(1, "Password is required"),
 });
+
+export type SearchParams = {
+    search?: string;
+    searchField?: string;
+};
 
 export type SignupForm = z.infer<typeof signupSchema>;
 export type LoginForm = z.infer<typeof loginSchema>;

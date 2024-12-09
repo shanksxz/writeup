@@ -32,7 +32,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api", userRoutes);
 app.use("/api", commentRouter);
-app.use("/api/post", postRoutes);
+app.use("/api/posts", postRoutes);
 app.use("/api/category", categoryRoutes);
 
 app.use((err: ApiError, req: Request, res: Response, next: NextFunction) => {

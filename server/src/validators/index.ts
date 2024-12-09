@@ -36,26 +36,18 @@ export const categorySchema = z.object({
 });
 
 export const searchQuerySchema = z.object({
-  page: z
-    .string()
-    .optional()
-    .transform((val) => Number.parseInt(val || "1")),
-  limit: z
-    .string()
-    .optional()
-    .transform((val) => Number.parseInt(val || "10")),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().default(10),
   search: z.string().optional(),
+  searchField: z.enum(["title", "content", "author", "tags"]).optional(),
   category: z.string().optional(),
   author: z.string().optional(),
   status: z.enum(["draft", "published", "archived"]).optional(),
-  sortBy: z.string().optional().default("createdAt"),
-  sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  minLikes: z
-    .string()
-    .optional()
-    .transform((val) => Number.parseInt(val || "0")),
+  sortBy: z.string().default("createdAt"),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  minLikes: z.coerce.number().optional(),
 });
 
 export type ValidatedSearchQuery = z.infer<typeof searchQuerySchema>;

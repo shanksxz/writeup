@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import Tiptap from "@/components/TipTap";
+import Tiptap from "@/components/editor/TipTap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

@@ -4,9 +4,21 @@ import { z } from "zod";
 import { User } from "../models";
 import type { AuthResponse } from "../types";
 import ApiError from "../utils/apiError";
+import { sendVerificationEmail } from "../utils/email";
 import { formatUserResponse, generateToken } from "../utils/helper";
 import { handleControllerError } from "../utils/helper";
 import { userSchema } from "../validators";
+
+const VERIFICATION_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+const generateVerificationToken = () => {
+  // use math.random to generate a random token
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
+interface IUser {
+  emailVerificationToken?: string;
+  emailVerificationExpiry?: Date;
+}
 
 export const signup = async (req: Request, res: Response<AuthResponse>) => {
   try {
@@ -21,6 +33,7 @@ export const signup = async (req: Request, res: Response<AuthResponse>) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+    const verificationToken = generateVerificationToken();
 
     const user = await User.create({
       firstName,
@@ -29,13 +42,17 @@ export const signup = async (req: Request, res: Response<AuthResponse>) => {
       email,
       password: hashedPassword,
       lastLogin: new Date(),
+      emailVerificationToken: verificationToken,
+      emailVerificationExpiry: new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY),
     });
+
+    await sendVerificationEmail(user.email, verificationToken);
 
     generateToken(res, user._id.toString());
 
     res.status(201).json({
       success: true,
-      message: "User created successfully",
+      message: "User created successfully. Please check your email to verify your account.",
       user: formatUserResponse(user),
     });
   } catch (error: any) {
@@ -74,7 +91,7 @@ export const signin = async (req: Request, res: Response) => {
 
 export const checkAuth = async (req: Request, res: Response) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).select("-password -savedPosts -posts");
     if (!user) {
       res.status(404).json({ message: "User not found" });
       return;
@@ -153,6 +170,59 @@ export const getProfiles = async (req: Request, res: Response) => {
         total: Math.ceil(total / limit),
         hasMore: skip + users.length < total,
       },
+    });
+  } catch (error: any) {
+    handleControllerError(error, res);
+  }
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.params;
+
+    const user = await User.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      throw new ApiError(400, "Invalid or expired verification token");
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpiry = undefined;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+    });
+  } catch (error: any) {
+    handleControllerError(error, res);
+  }
+};
+
+export const resendVerificationEmail = async (req: Request, res: Response) => {
+  try {
+    const { callbackUrl } = req.query;
+    const user = await User.findById(req.user.id);
+    if (!user) throw new ApiError(404, "User not found");
+
+    if (user.isEmailVerified) {
+      throw new ApiError(400, "Email is already verified");
+    }
+
+    const verificationToken = generateVerificationToken();
+    user.emailVerificationToken = verificationToken;
+    user.emailVerificationExpiry = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY);
+    await user.save();
+
+    await sendVerificationEmail(user.email, verificationToken, callbackUrl as string);
+
+    res.status(200).json({
+      success: true,
+      message: "Verification email sent successfully",
     });
   } catch (error: any) {
     handleControllerError(error, res);

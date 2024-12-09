@@ -1,8 +1,8 @@
-import type { LoginForm, Post, PostComments, SignupForm } from "@/types";
+import type { LoginForm, Post, PostComments, SearchParams, SignupForm } from "@/types";
 import axios from "axios";
 
 type PostResponse = {
-    posts: Post["post"][];
+    posts: Post[];
     totalPages: number;
     currentPage: number;
     totalPosts: number;
@@ -13,13 +13,23 @@ type PostResponse = {
 export const url = import.meta.env.VITE_API_URL;
 export const POSTS_PER_PAGE = 5;
 
-export async function getPosts(page: number, limit: number): Promise<PostResponse> {
-    const res = await axios.get(`${url}/post`, {
-        params: { page, limit },
+export const getPosts = async (
+    page: number,
+    limit: number,
+    searchParams: SearchParams = {},
+): Promise<PostResponse> => {
+    const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(searchParams.search && { search: searchParams.search }),
+        ...(searchParams.searchField && { searchField: searchParams.searchField }),
+    });
+
+    const res = await axios.get(`${url}/posts/search?${queryParams}`, {
         withCredentials: true,
     });
-    return res.data;
-}
+    return res.data.data;
+};
 
 export async function getCurrentUserPosts(page: number, limit: number): Promise<PostResponse> {
     const res = await axios.get(`${url}/user/posts`, {
@@ -30,22 +40,25 @@ export async function getCurrentUserPosts(page: number, limit: number): Promise<
 }
 
 export async function getPostById(id: string): Promise<Post & { likeStatus: "unliked" | "liked" }> {
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/post/${id}`, {
+    const res = await axios.get(`${url}/posts/${id}`, {
         withCredentials: true,
     });
-    return res.data;
+    return {
+        ...res.data.post,
+        likeStatus: res.data.likeStatus,
+    };
 }
 
 // not used
 export async function deletePost(id: string): Promise<void> {
-    await axios.delete(`${import.meta.env.VITE_API_URL}/post/${id}`, {
+    await axios.delete(`${url}/posts/${id}`, {
         withCredentials: true,
     });
 }
 
 export async function updatePost(id: string, title: string, content: string): Promise<Post> {
     const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/post/${id}`,
+        `${url}/posts/${id}`,
         {
             title,
             content,
@@ -59,7 +72,7 @@ export async function updatePost(id: string, title: string, content: string): Pr
 
 export async function createComment(postId: string, content: string): Promise<PostComments> {
     const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/${postId}/comment`,
+        `${url}/${postId}/comment`,
         { content },
         {
             withCredentials: true,
@@ -69,7 +82,7 @@ export async function createComment(postId: string, content: string): Promise<Po
 }
 
 export async function getAllComments(postId: string): Promise<PostComments[]> {
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/${postId}/comment`, {
+    const res = await axios.get(`${url}/${postId}/comment`, {
         withCredentials: true,
     });
     return res.data.comments;
@@ -81,7 +94,7 @@ export async function likePost(postId: string): Promise<
     }
 > {
     const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/post/${postId}/like`,
+        `${url}/posts/${postId}/like`,
         {},
         {
             withCredentials: true,
@@ -91,13 +104,18 @@ export async function likePost(postId: string): Promise<
 }
 
 export async function loginUser(data: LoginForm) {
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/signin`, data, {
+    const response = await axios.post(`${url}/auth/signin`, data, {
         withCredentials: true,
     });
     return response.data;
 }
 
 export async function signUpUser(data: SignupForm) {
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/signup`, data);
+    const response = await axios.post(`${url}/auth/signup`, data);
+    return response.data;
+}
+
+export async function verifyEmail(token: string) {
+    const response = await axios.get(`${url}/auth/verify/${token}`);
     return response.data;
 }

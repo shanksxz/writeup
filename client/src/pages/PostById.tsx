@@ -38,22 +38,22 @@ export default function PostById() {
         mutationFn: () => likePost(id as string),
         onMutate: async () => {
             await queryClient.cancelQueries({ queryKey: ["post", id] });
-            const previousPost = queryClient.getQueryData<Post>(["post", id]);
+            const previousPost = queryClient.getQueryData<
+                Post & { likeStatus: "unliked" | "liked" }
+            >(["post", id]);
             if (previousPost) {
-                queryClient.setQueryData<Post>(["post", id], (old) => {
-                    if (!old) return previousPost;
-
-                    return {
-                        post: {
-                            ...old.post,
+                queryClient.setQueryData<Post & { likeStatus: "unliked" | "liked" }>(
+                    ["post", id],
+                    (old) => {
+                        if (!old) return previousPost;
+                        return {
+                            ...old,
                             likeCount:
-                                old.likeStatus === "liked"
-                                    ? old.post.likeCount - 1
-                                    : old.post.likeCount + 1,
-                        },
-                        likeStatus: old.likeStatus === "liked" ? "unliked" : "liked",
-                    };
-                });
+                                old.likeStatus === "liked" ? old.likeCount - 1 : old.likeCount + 1,
+                            likeStatus: old.likeStatus === "liked" ? "unliked" : "liked",
+                        };
+                    },
+                );
             }
 
             return { previousPost };
@@ -134,24 +134,24 @@ export default function PostById() {
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back to all posts
                 </Button>
                 <article className="mx-auto">
-                    <h1 className="text-3xl font-bold mb-4 text-foreground">{post.post.title}</h1>
+                    <h1 className="text-3xl font-bold mb-4 text-foreground">{post.title}</h1>
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-4">
                         <Avatar>
                             <AvatarFallback className="text-lg font-semibold bg-primary text-primary-foreground">
-                                {post.post.author.username[0].toUpperCase()}
+                                {post.author.username[0].toUpperCase()}
                             </AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{post.post.author.username}</span>
+                        <span className="font-medium">{post.author.username}</span>
                         <span>•</span>
                         <time
-                            dateTime={new Date(post.post.createdAt).toLocaleString()}
+                            dateTime={new Date(post.createdAt).toLocaleString()}
                             className="text-muted-foreground"
                         >
-                            {new Date(post.post.createdAt).toLocaleDateString()}
+                            {new Date(post.createdAt).toLocaleDateString()}
                         </time>
                     </div>
                     <div
-                        dangerouslySetInnerHTML={{ __html: post.post.content }}
+                        dangerouslySetInnerHTML={{ __html: post.content }}
                         className="text-foreground"
                     />
                 </article>
@@ -172,11 +172,11 @@ export default function PostById() {
                                     post.likeStatus === "liked" ? "fill-current" : ""
                                 }`}
                             />
-                            <span className="text-sm font-medium">{post.post.likeCount} Likes</span>
+                            <span className="text-sm font-medium">{post.likeCount} Likes</span>
                         </button>
                         <button className="flex items-center gap-2 text-muted-foreground">
                             <MessageCircle className="h-5 w-5" />
-                            <span className="text-sm font-medium">{post.post.commentsCount}</span>
+                            <span className="text-sm font-medium">{post.commentsCount}</span>
                         </button>
                     </div>
 
@@ -185,7 +185,7 @@ export default function PostById() {
                             <div className="flex items-start gap-3">
                                 <Avatar className="w-8 h-8">
                                     <AvatarFallback className="bg-primary text-primary-foreground">
-                                        {post.post.author.username[0].toUpperCase()}
+                                        {post.author.username[0].toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
                                 <Textarea

@@ -1,6 +1,7 @@
 import type { Response } from "express";
 import jwt from "jsonwebtoken";
-import mongoose, { type PipelineStage } from "mongoose";
+import type mongoose from "mongoose";
+import type { PipelineStage } from "mongoose";
 import { ZodError } from "zod";
 import { JWT_SECRET } from "../config/config";
 import type { Post } from "../models";
@@ -9,8 +10,6 @@ import type { ValidatedSearchQuery } from "../validators";
 import ApiError from "./apiError";
 
 export function handleControllerError(error: unknown, res: Response) {
-  console.error("Controller error:", error);
-
   if (error instanceof ZodError) {
     return res.status(400).json({
       success: false,
@@ -26,6 +25,7 @@ export function handleControllerError(error: unknown, res: Response) {
     });
   }
 
+  console.log(error);
   return res.status(500).json({
     success: false,
     error: "An unexpected error occurred",
@@ -35,100 +35,126 @@ export function handleControllerError(error: unknown, res: Response) {
 export function buildSearchQuery(params: ValidatedSearchQuery): mongoose.FilterQuery<typeof Post> {
   const query: any = {};
 
-  if (params.search) {
+  if (params.search?.trim() && params.searchField) {
+    switch (params.searchField) {
+      case "title":
+        query.title = { $regex: params.search, $options: "i" };
+        break;
+      case "content":
+        query.content = { $regex: params.search, $options: "i" };
+        break;
+      //   case "author":
+      //    NOTE: why we have to handle this in the aggregation pipeline?
+      // because we need to unwind the author details
+      // unwind means we need to get the author details from the users collection
+      //     break;
+      case "tags":
+        query.tags = { $regex: params.search, $options: "i" };
+        break;
+      default:
+        query.$text = { $search: params.search };
+    }
+  } else if (params.search?.trim()) {
     query.$text = { $search: params.search };
   }
-
-  if (params.category) {
-    query.categories = new mongoose.Types.ObjectId(params.category);
-  }
-
-  if (params.author) {
-    query.author = new mongoose.Types.ObjectId(params.author);
-  }
-
-  if (params.status) {
-    query.status = params.status;
-  }
-
-  if (params.startDate || params.endDate) {
-    query.createdAt = {};
-    if (params.startDate) {
-      query.createdAt.$gte = new Date(params.startDate);
-    }
-    if (params.endDate) {
-      query.createdAt.$lte = new Date(params.endDate);
-    }
-  }
-
-  if (params.minLikes) {
-    query.likeCount = { $gte: params.minLikes };
-  }
-
   return query;
 }
 
 export function buildAggregationPipeline(query: any, params: ValidatedSearchQuery): PipelineStage[] {
   const skip = (params.page - 1) * params.limit;
+  const pipeline: PipelineStage[] = [];
 
-  return [
-    { $match: query },
-    {
-      $facet: {
-        posts: [
-          { $sort: { [params.sortBy]: params.sortOrder === "asc" ? 1 : -1 } },
-          { $skip: skip },
-          { $limit: params.limit },
-          {
-            $lookup: {
-              from: "users",
-              localField: "author",
-              foreignField: "_id",
-              pipeline: [{ $project: { username: 1, firstName: 1, lastName: 1 } }],
-              as: "author",
-            },
-          },
-          { $unwind: "$author" },
-          {
-            $lookup: {
-              from: "categories",
-              localField: "categories",
-              foreignField: "_id",
-              pipeline: [{ $project: { name: 1 } }],
-              as: "categories",
-            },
-          },
-        ],
-        pagination: [
-          { $count: "total" },
-          {
-            $addFields: {
-              currentPage: params.page,
-              totalPages: {
-                $ceil: {
-                  $divide: ["$total", params.limit],
-                },
-              },
-              hasNextPage: {
-                $lt: [params.page, { $ceil: { $divide: ["$total", params.limit] } }],
-              },
-              hasPrevPage: { $gt: [params.page, 1] },
-            },
-          },
-        ],
-        stats: [
-          {
-            $group: {
-              _id: null,
-              avgLikes: { $avg: "$likeCount" },
-              totalLikes: { $sum: "$likeCount" },
-              totalComments: { $sum: "$commentsCount" },
-            },
-          },
-        ],
+  // if searching by author, add a lookup stage first
+  if (params.searchField === "author" && params.search) {
+    pipeline.push(
+      {
+        $lookup: {
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "authorDetails",
+        },
       },
+      // unwind the author details
+      { $unwind: "$authorDetails" },
+      {
+        $match: {
+          $or: [
+            {
+              "authorDetails.username": {
+                $regex: params.search,
+                $options: "i",
+              },
+            },
+            {
+              "authorDetails.firstName": {
+                $regex: params.search,
+                $options: "i",
+              },
+            },
+            {
+              "authorDetails.lastName": {
+                $regex: params.search,
+                $options: "i",
+              },
+            },
+          ],
+        },
+      },
+    );
+  }
+
+  if (Object.keys(query).length > 0) {
+    pipeline.push({ $match: query });
+  }
+
+  pipeline.push({
+    $facet: {
+      posts: [
+        { $sort: { [params.sortBy]: params.sortOrder === "asc" ? 1 : -1 } },
+        { $skip: skip },
+        { $limit: params.limit },
+        {
+          $lookup: {
+            from: "users",
+            localField: "author",
+            foreignField: "_id",
+            pipeline: [{ $project: { username: 1, firstName: 1, lastName: 1 } }],
+            as: "author",
+          },
+        },
+        { $unwind: "$author" },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "categories",
+            foreignField: "_id",
+            pipeline: [{ $project: { name: 1 } }],
+            as: "categories",
+          },
+        },
+      ],
+      pagination: [
+        { $count: "total" },
+        {
+          $addFields: {
+            currentPage: params.page,
+            totalPages: {
+              $ceil: {
+                $divide: ["$total", params.limit],
+              },
+            },
+            hasNextPage: {
+              $lt: [params.page, { $ceil: { $divide: ["$total", params.limit] } }],
+            },
+            hasPrevPage: { $gt: [params.page, 1] },
+          },
+        },
+      ],
     },
-  ] as PipelineStage[];
+  });
+
+  return pipeline;
 }
 
 export const generateToken = (res: Response, userId: string) => {

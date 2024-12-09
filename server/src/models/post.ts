@@ -61,4 +61,12 @@ postSchema.pre("save", function (next) {
   next();
 });
 
+// Add text indexes for searchable fields
+postSchema.index({
+  title: "text",
+  content: "text",
+  "author.username": "text",
+  tags: "text",
+});
+
 export default mongoose.model("Post", postSchema);

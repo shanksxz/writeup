@@ -127,35 +127,6 @@ export const deletePost = async (req: Request, res: Response) => {
   }
 };
 
-export const getPosts = async (req: Request<{}, {}, {}, PaginationQuery>, res: Response) => {
-  try {
-    if (!req.query.page || !req.query.limit) {
-      res.status(400).json({ error: "Please provide page and limit query parameters" });
-      return;
-    }
-
-    const page = Number.parseInt(req.query.page) || 1;
-    const limit = Number.parseInt(req.query.limit) || 10;
-    const skipIndex = (page - 1) * limit;
-
-    const totalPosts = await Post.countDocuments();
-    const totalPages = Math.ceil(totalPosts / limit);
-
-    const posts = await Post.find().populate("author", "username").sort({ createdAt: -1 }).skip(skipIndex).limit(limit);
-
-    res.status(200).json({
-      posts,
-      currentPage: page,
-      totalPages,
-      totalPosts,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
-    });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
 export const getUserPosts = async (req: Request<{}, {}, {}, PaginationQuery>, res: Response) => {
   try {
     if (!req.query.page || !req.query.limit) {
@@ -245,6 +216,9 @@ export const likePost = async (req: Request, res: Response) => {
 
 export const searchPosts = async (req: Request<{}, {}, {}, ValidatedSearchQuery>, res: Response) => {
   try {
+    console.log("Search endpoint hit");
+    console.log("Query params:", req.query);
+
     const validatedQuery = searchQuerySchema.parse(req.query);
 
     const query = buildSearchQuery(validatedQuery);
@@ -261,11 +235,6 @@ export const searchPosts = async (req: Request<{}, {}, {}, ValidatedSearchQuery>
           totalPosts: 0,
           hasNextPage: false,
           hasPrevPage: validatedQuery.page > 1,
-        },
-        stats: results?.stats || {
-          avgLikes: 0,
-          totalLikes: 0,
-          totalComments: 0,
         },
       },
     };

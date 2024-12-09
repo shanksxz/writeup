@@ -1,6 +1,6 @@
 import Layout from "@/components/Layout";
 import LoadingSpinner from "@/components/Loading";
-import Tiptap from "@/components/TipTap";
+import Tiptap from "@/components/editor/TipTap";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -23,12 +23,12 @@ import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-export default function BlogPostManager() {
+export default function MyPosts() {
     const navigate = useNavigate();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [postToDelete, setPostToDelete] = useState<string>();
-    const [postToEdit, setPostToEdit] = useState<Post["post"] | null>();
+    const [postToEdit, setPostToEdit] = useState<Post | null>();
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
     const POSTS_PER_PAGE = 2;
@@ -110,7 +110,7 @@ export default function BlogPostManager() {
         setIsDeleteDialogOpen(true);
     };
 
-    const openEditDialog = (post: Post["post"]) => {
+    const openEditDialog = (post: Post) => {
         setPostToEdit(post);
         setValue("title", post.title);
         setValue("content", post.content);
@@ -185,7 +185,7 @@ export default function BlogPostManager() {
                                             Published on{" "}
                                             {new Date(post.createdAt).toLocaleDateString()}
                                         </p>
-                                        <p className="text-sm md:text-base text-gray-700">
+                                        <p className="text-sm md:text-base text-gray-700 line-clamp-2">
                                             {stripHtmlAndTruncate(post.content)}
                                         </p>
                                     </CardContent>
