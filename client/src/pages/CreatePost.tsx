@@ -10,7 +10,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import type { Post } from "@/types";
+import { createPost } from "@/helper";
+import { type PostForm, postSchema } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import axios, { type AxiosError } from "axios";
@@ -19,23 +20,6 @@ import { useEffect, useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import * as z from "zod";
-
-const postSchema = z.object({
-    title: z.string().min(1, "Title is required").max(100, "Title must be 100 characters or less"),
-    content: z.string().min(10, "Content must be at least 10 characters long"),
-    category: z.enum(["technology", "lifestyle", "travel", "food"]),
-    image: z
-        .any()
-        .refine((file) => file?.[0]?.size <= 5000000, {
-            message: "Image size must be less than 5MB",
-        })
-        .refine((file) => ["image/jpeg", "image/png"].includes(file?.[0]?.type), {
-            message: "Image must be either JPEG or PNG",
-        }),
-});
-
-type PostForm = z.infer<typeof postSchema>;
 
 export default function CreatePost() {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -68,25 +52,7 @@ export default function CreatePost() {
 
     const { mutate, status } = useMutation({
         mutationFn: async (data: PostForm) => {
-            const formData = new FormData();
-            formData.append("title", data.title);
-            formData.append("content", data.content);
-            formData.append("category", data.category);
-            if (data.image && data.image instanceof FileList && data.image.length > 0) {
-                formData.append("image", data.image[0]);
-            }
-
-            const response = await axios.post<Post>(
-                `${import.meta.env.VITE_API_URL}/post/create`,
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                    withCredentials: true,
-                },
-            );
-            return response.data;
+            await createPost(data);
         },
         onSuccess: () => {
             toast.success("Post created successfully, redirecting.....");

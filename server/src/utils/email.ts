@@ -9,10 +9,14 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-console.log(EMAIL_USER, EMAIL_PASSWORD);
-
 export const sendVerificationEmail = async (email: string, token: string, callbackUrl?: string) => {
-  const verificationUrl = `${CLIENT_URL}/verify-email/${token}${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`;
+  //TODO: Remove this after development
+  let verificationUrl = "";
+  if (process.env.NODE_ENV === "development") {
+    verificationUrl = `http://localhost:5173/verify-email/${token}${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`;
+  } else {
+    verificationUrl = `${CLIENT_URL}/verify-email/${token}${callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`;
+  }
 
   const mailOptions = {
     from: EMAIL_USER,

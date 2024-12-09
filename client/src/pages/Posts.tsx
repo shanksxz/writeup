@@ -39,10 +39,19 @@ export default function Posts() {
     };
 
     const hasNoPosts = !isLoading && !isError && (!data?.posts || data.posts.length === 0);
+    const showPosts = !isLoading && !isError && data?.posts && data.posts.length > 0;
+    const showPagination = !isLoading && !isError && data?.totalPages && data.totalPages > 1;
 
     return (
         <Layout>
             <div className="flex flex-col min-h-screen space-y-8 py-8">
+                <div className="space-y-2">
+                    <h2 className="text-2xl font-bold tracking-tight">Search Posts</h2>
+                    <p className="text-muted-foreground">
+                        Find the content you're looking for using our advanced search.
+                    </p>
+                </div>
+
                 <PostSearch
                     initialFilters={{
                         search: searchFilters.search,
@@ -50,6 +59,7 @@ export default function Posts() {
                     }}
                     onSearch={handleSearch}
                 />
+
                 {isLoading && (
                     <div className="flex justify-center items-center h-64">
                         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -73,7 +83,7 @@ export default function Posts() {
                     </Alert>
                 )}
 
-                {!isLoading && !isError && data?.posts && data.posts.length > 0 && (
+                {showPosts && (
                     <section>
                         <h2 className="text-2xl font-semibold mb-4">All Posts</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -84,7 +94,7 @@ export default function Posts() {
                     </section>
                 )}
 
-                {!isLoading && !isError && data?.totalPages && data?.totalPages > 1 && (
+                {showPagination && (
                     <div className="py-4">
                         <div className="container flex justify-center items-center space-x-4">
                             <Button

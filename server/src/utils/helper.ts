@@ -9,6 +9,11 @@ import type { UserResponse } from "../types";
 import type { ValidatedSearchQuery } from "../validators";
 import ApiError from "./apiError";
 
+export const VERIFICATION_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+export const generateVerificationToken = () => {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
 export function handleControllerError(error: unknown, res: Response) {
   if (error instanceof ZodError) {
     return res.status(400).json({

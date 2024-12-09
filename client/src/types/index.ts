@@ -79,5 +79,20 @@ export type SearchParams = {
     searchField?: string;
 };
 
+export const postSchema = z.object({
+    title: z.string().min(1, "Title is required").max(100, "Title must be 100 characters or less"),
+    content: z.string().min(10, "Content must be at least 10 characters long"),
+    category: z.enum(["technology", "lifestyle", "travel", "food"]),
+    image: z
+        .any()
+        .refine((file) => file?.[0]?.size <= 5000000, {
+            message: "Image size must be less than 5MB",
+        })
+        .refine((file) => ["image/jpeg", "image/png"].includes(file?.[0]?.type), {
+            message: "Image must be either JPEG or PNG",
+        }),
+});
+
+export type PostForm = z.infer<typeof postSchema>;
 export type SignupForm = z.infer<typeof signupSchema>;
 export type LoginForm = z.infer<typeof loginSchema>;

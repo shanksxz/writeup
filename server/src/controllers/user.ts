@@ -5,20 +5,14 @@ import { User } from "../models";
 import type { AuthResponse } from "../types";
 import ApiError from "../utils/apiError";
 import { sendVerificationEmail } from "../utils/email";
-import { formatUserResponse, generateToken } from "../utils/helper";
+import {
+  VERIFICATION_TOKEN_EXPIRY,
+  formatUserResponse,
+  generateToken,
+  generateVerificationToken,
+} from "../utils/helper";
 import { handleControllerError } from "../utils/helper";
-import { userSchema } from "../validators";
-
-const VERIFICATION_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
-const generateVerificationToken = () => {
-  // use math.random to generate a random token
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-};
-
-interface IUser {
-  emailVerificationToken?: string;
-  emailVerificationExpiry?: Date;
-}
+import { signInSchema, userSchema } from "../validators";
 
 export const signup = async (req: Request, res: Response<AuthResponse>) => {
   try {
@@ -59,11 +53,6 @@ export const signup = async (req: Request, res: Response<AuthResponse>) => {
     handleControllerError(error, res);
   }
 };
-
-const signInSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
 
 export const signin = async (req: Request, res: Response) => {
   try {

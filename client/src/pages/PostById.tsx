@@ -55,7 +55,6 @@ export default function PostById() {
                     },
                 );
             }
-
             return { previousPost };
         },
         onError: (_err, _variables, context) => {
@@ -87,7 +86,10 @@ export default function PostById() {
         }
     };
 
-    if (postLoading || commentsLoading) {
+    const isLoading = postLoading || commentsLoading;
+    const showError = postError || !post;
+
+    if (isLoading) {
         return (
             <div className="flex h-screen justify-center items-center">
                 <LoadingSpinner />
@@ -95,28 +97,13 @@ export default function PostById() {
         );
     }
 
-    if (postError) {
+    if (showError) {
         return (
             <Layout>
                 <div className="container mx-auto px-4 md:px-6 py-8">
                     <div className="text-center">
                         <h1 className="text-3xl font-bold mb-4 text-destructive">Error</h1>
                         <p className="text-destructive">{(postErrorData as AxiosError).message}</p>
-                    </div>
-                </div>
-            </Layout>
-        );
-    }
-
-    if (!post) {
-        return (
-            <Layout>
-                <div className="container mx-auto px-4 md:px-6 py-8">
-                    <div className="text-center">
-                        <h1 className="text-3xl font-bold mb-4">Post Not Found</h1>
-                        <p className="text-muted-foreground">
-                            The requested post could not be found.
-                        </p>
                     </div>
                 </div>
             </Layout>

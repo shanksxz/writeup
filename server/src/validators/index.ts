@@ -50,6 +50,11 @@ export const searchQuerySchema = z.object({
   minLikes: z.coerce.number().optional(),
 });
 
+export const signInSchema = z.object({
+  email: z.string().email(),
+  password: z.string(),
+});
+
 export type ValidatedSearchQuery = z.infer<typeof searchQuerySchema>;
 export type commentSchemaType = z.infer<typeof commentSchema>;
 export type postSchemaType = z.infer<typeof postSchema>;

@@ -1,4 +1,4 @@
-import type { LoginForm, Post, PostComments, SearchParams, SignupForm } from "@/types";
+import type { LoginForm, Post, PostComments, PostForm, SearchParams, SignupForm } from "@/types";
 import axios from "axios";
 
 type PostResponse = {
@@ -12,6 +12,7 @@ type PostResponse = {
 
 export const url = import.meta.env.VITE_API_URL;
 export const POSTS_PER_PAGE = 5;
+export const POSTS_PER_PAGE_MY_POSTS = 2;
 
 export const getPosts = async (
     page: number,
@@ -29,6 +30,24 @@ export const getPosts = async (
         withCredentials: true,
     });
     return res.data.data;
+};
+
+export const createPost = async (data: PostForm): Promise<Post> => {
+    const formData = new FormData();
+    formData.append("title", data.title);
+    formData.append("content", data.content);
+    formData.append("category", data.category);
+    if (data.image && data.image instanceof FileList && data.image.length > 0) {
+        formData.append("image", data.image[0]);
+    }
+
+    const res = await axios.post(`${url}/posts`, formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+    });
+    return res.data;
 };
 
 export async function getCurrentUserPosts(page: number, limit: number): Promise<PostResponse> {
@@ -49,14 +68,13 @@ export async function getPostById(id: string): Promise<Post & { likeStatus: "unl
     };
 }
 
-// not used
-export async function deletePost(id: string): Promise<void> {
+export async function deletePostById(id: string): Promise<void> {
     await axios.delete(`${url}/posts/${id}`, {
         withCredentials: true,
     });
 }
 
-export async function updatePost(id: string, title: string, content: string): Promise<Post> {
+export async function updatePostById(id: string, title: string, content: string): Promise<Post> {
     const res = await axios.put(
         `${url}/posts/${id}`,
         {
