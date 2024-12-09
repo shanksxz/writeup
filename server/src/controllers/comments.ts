@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import mongoose from "mongoose";
 import { ZodError } from "zod";
 import { Comment, Post } from "../models";
+import { handleControllerError } from "../utils/helper";
 import { commentSchema } from "../validators";
 
 export async function createComment(req: Request, res: Response) {
@@ -32,11 +33,7 @@ export async function createComment(req: Request, res: Response) {
       comment: newComment,
     });
   } catch (error: any) {
-    if (error instanceof ZodError) {
-      res.status(400).json({ error: error.errors });
-    } else {
-      res.status(500).json({ error: error.message });
-    }
+    handleControllerError(error, res);
   }
 }
 
@@ -48,7 +45,7 @@ export async function getAllComments(req: Request, res: Response) {
 
     res.status(200).json({ comments });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    handleControllerError(error, res);
   }
 }
 
@@ -81,7 +78,7 @@ export async function likeComment(req: Request, res: Response) {
       likeStatus,
     });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    handleControllerError(error, res);
   }
 }
 
@@ -103,7 +100,7 @@ export async function deleteComment(req: Request, res: Response) {
     await Comment.findByIdAndDelete(commentId);
     res.status(200).json({ message: "Comment deleted successfully" });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    handleControllerError(error, res);
   }
 }
 

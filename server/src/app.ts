@@ -3,6 +3,7 @@ import cors from "cors";
 import express, { type Request, type Response, type NextFunction } from "express";
 import { ALLOWED_ORIGINS } from "./config/config";
 import logger from "./config/logger";
+import categoryRoutes from "./routes/category";
 import commentRouter from "./routes/comments";
 import postRoutes from "./routes/posts";
 import userRoutes from "./routes/user";
@@ -30,8 +31,9 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use("/api", userRoutes);
-app.use("/api", postRoutes);
 app.use("/api", commentRouter);
+app.use("/api/posts", postRoutes);
+app.use("/api/category", categoryRoutes);
 
 app.use((err: ApiError, req: Request, res: Response, next: NextFunction) => {
   const statusCode = err.statusCode || 500;

@@ -56,4 +56,17 @@ const postSchema = new mongoose.Schema({
   },
 });
 
+postSchema.pre("save", function (next) {
+  this.updatedAt = new Date();
+  next();
+});
+
+// Add text indexes for searchable fields
+postSchema.index({
+  title: "text",
+  content: "text",
+  "author.username": "text",
+  tags: "text",
+});
+
 export default mongoose.model("Post", postSchema);

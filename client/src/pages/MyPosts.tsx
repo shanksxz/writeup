@@ -1,6 +1,6 @@
 import Layout from "@/components/Layout";
 import LoadingSpinner from "@/components/Loading";
-import Tiptap from "@/components/TipTap";
+import Tiptap from "@/components/editor/TipTap";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -12,26 +12,29 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { getCurrentUserPosts } from "@/helper";
+import {
+    POSTS_PER_PAGE_MY_POSTS,
+    deletePostById,
+    getCurrentUserPosts,
+    updatePostById,
+} from "@/helper";
 import type { Post } from "@/types";
 import { stripHtmlAndTruncate } from "@/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import axios, { AxiosError } from "axios";
-import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { AxiosError } from "axios";
+import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-export default function BlogPostManager() {
+export default function MyPosts() {
     const navigate = useNavigate();
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [postToDelete, setPostToDelete] = useState<string>();
-    const [postToEdit, setPostToEdit] = useState<Post["post"] | null>();
+    const [postToEdit, setPostToEdit] = useState<Post | null>();
     const [currentPage, setCurrentPage] = useState(1);
-    const [searchTerm, setSearchTerm] = useState("");
-    const POSTS_PER_PAGE = 2;
 
     const { control, handleSubmit, setValue, reset } = useForm({
         defaultValues: {
@@ -45,15 +48,13 @@ export default function BlogPostManager() {
         isLoading,
         refetch: fetchPosts,
     } = useQuery({
-        queryKey: ["posts", currentPage, searchTerm],
-        queryFn: () => getCurrentUserPosts(currentPage, POSTS_PER_PAGE),
+        queryKey: ["posts", currentPage],
+        queryFn: () => getCurrentUserPosts(currentPage, POSTS_PER_PAGE_MY_POSTS),
     });
 
     const { mutate: deletePost, isPending: isDeleting } = useMutation({
         mutationFn: async (postId: string) => {
-            await axios.delete(`${import.meta.env.VITE_API_URL}/post/${postId}`, {
-                withCredentials: true,
-            });
+            await deletePostById(postId);
         },
         onSuccess: () => {
             toast.success("Post deleted successfully");
@@ -70,16 +71,7 @@ export default function BlogPostManager() {
 
     const { mutate: updatePost, isPending: isUpdating } = useMutation({
         mutationFn: async (data: { title: string; content: string; postId: string }) => {
-            await axios.put(
-                `${import.meta.env.VITE_API_URL}/post/${data.postId}`,
-                {
-                    title: data.title,
-                    content: data.content,
-                },
-                {
-                    withCredentials: true,
-                },
-            );
+            await updatePostById(data.postId, data.title, data.content);
         },
         onSuccess: () => {
             toast.success("Post updated successfully");
@@ -101,16 +93,12 @@ export default function BlogPostManager() {
         }
     };
 
-    const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-    };
-
     const openDeleteDialog = (postId: string) => {
         setPostToDelete(postId);
         setIsDeleteDialogOpen(true);
     };
 
-    const openEditDialog = (post: Post["post"]) => {
+    const openEditDialog = (post: Post) => {
         setPostToEdit(post);
         setValue("title", post.title);
         setValue("content", post.content);
@@ -144,20 +132,7 @@ export default function BlogPostManager() {
             <div className="px-4 md:px-6 py-4 md:py-8">
                 <header className="mb-4 md:mb-8">
                     <h1 className="text-2xl md:text-3xl font-bold mb-4">My Blog Posts</h1>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <form onSubmit={handleSearch} className="w-full sm:max-w-sm flex">
-                            <Input
-                                className="rounded-r-none"
-                                placeholder="Search blog posts..."
-                                type="search"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                            <Button type="submit" className="rounded-l-none">
-                                <Search className="h-4 w-4" />
-                                <span className="sr-only">Search</span>
-                            </Button>
-                        </form>
+                    <div className="flex justify-end items-center">
                         <Button
                             onClick={() => navigate("/create/post")}
                             className="w-full sm:w-auto"
@@ -185,7 +160,7 @@ export default function BlogPostManager() {
                                             Published on{" "}
                                             {new Date(post.createdAt).toLocaleDateString()}
                                         </p>
-                                        <p className="text-sm md:text-base text-gray-700">
+                                        <p className="text-sm md:text-base text-gray-700 line-clamp-2">
                                             {stripHtmlAndTruncate(post.content)}
                                         </p>
                                     </CardContent>

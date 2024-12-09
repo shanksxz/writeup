@@ -5,14 +5,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
-import Login from "./components/Login.jsx";
-import Protected from "./components/Protected.js";
-import Signup from "./components/Signup.jsx";
+import Login from "./components/auth/Login.js";
+import Protected from "./components/auth/Protected.js";
+import Signup from "./components/auth/Signup.js";
+import VerifyEmail from "./components/email/VerifyEmail.js";
 import { AuthProvider } from "./context/useAuth.jsx";
 import { ThemeProvider } from "./context/useTheme.jsx";
 import CreatePost from "./pages/CreatePost.jsx";
 import MyPosts from "./pages/MyPosts.jsx";
-import PostById from "./pages/PostById.js";
+import PostById from "./pages/PostById.jsx";
+import Posts from "./pages/Posts.jsx";
 import Profile from "./pages/Profile.jsx";
 
 const router = createBrowserRouter([
@@ -31,7 +33,7 @@ const router = createBrowserRouter([
     {
         path: "/create/post",
         element: (
-            <Protected fallBack={<Login />}>
+            <Protected fallBack={<Login />} requireVerified>
                 <CreatePost />
             </Protected>
         ),
@@ -39,7 +41,7 @@ const router = createBrowserRouter([
     {
         path: "/user/post",
         element: (
-            <Protected fallBack={<Login />}>
+            <Protected fallBack={<Login />} requireVerified>
                 <MyPosts />
             </Protected>
         ),
@@ -59,6 +61,14 @@ const router = createBrowserRouter([
                 <Profile />
             </Protected>
         ),
+    },
+    {
+        path: "/posts",
+        element: <Posts />,
+    },
+    {
+        path: "/verify-email/:token",
+        element: <VerifyEmail />,
     },
     {
         path: "*",

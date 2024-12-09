@@ -1,3 +1,4 @@
+import ModeToggle from "@/components/header/ModeToggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,6 @@ import axios from "axios";
 import { Menu } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import ModeToggle from "./ModeToggle";
 
 export default function Navbar() {
     const { user, setUser } = useAuth();
@@ -33,7 +33,7 @@ export default function Navbar() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="max-w-6xl mx-auto px-5 md:px-0 flex h-14 items-center">
+            <div className="px-5 md:px-0 flex h-14 items-center">
                 <MainNav />
                 <MobileNav />
                 <div className="flex flex-1 items-center justify-end space-x-4">
@@ -86,6 +86,12 @@ function MainNav() {
                     Home
                 </Link>
                 <Link
+                    to="/posts"
+                    className="transition-colors hover:text-foreground/80 text-foreground/60"
+                >
+                    Explore
+                </Link>
+                <Link
                     to="/user/post"
                     className="transition-colors hover:text-foreground/80 text-foreground/60"
                 >
@@ -124,6 +130,12 @@ function MobileNav() {
                         className="transition-colors hover:text-foreground/80 text-foreground/60"
                     >
                         Home
+                    </Link>
+                    <Link
+                        to="/posts"
+                        className="transition-colors hover:text-foreground/80 text-foreground/60"
+                    >
+                        Explore
                     </Link>
                     <Link
                         to="/user/post"

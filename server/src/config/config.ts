@@ -13,6 +13,9 @@ const configSchema = z.object({
   CLOUDINARY_API_KEY: z.string(),
   CLOUDINARY_API_SECRET: z.string(),
   ALLOWED_ORIGINS: z.string(),
+  EMAIL_USER: z.string(),
+  EMAIL_PASSWORD: z.string(),
+  CLIENT_URL: z.string(),
 });
 
 const envVars = configSchema.parse(process.env);
@@ -24,3 +27,6 @@ export const CLOUDINARY_CLOUD_NAME = envVars.CLOUDINARY_CLOUD_NAME;
 export const CLOUDINARY_API_KEY = envVars.CLOUDINARY_API_KEY;
 export const CLOUDINARY_API_SECRET = envVars.CLOUDINARY_API_SECRET;
 export const ALLOWED_ORIGINS = envVars.ALLOWED_ORIGINS.split(",");
+export const EMAIL_USER = envVars.EMAIL_USER;
+export const EMAIL_PASSWORD = envVars.EMAIL_PASSWORD;
+export const CLIENT_URL = envVars.CLIENT_URL;

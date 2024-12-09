@@ -1,23 +1,28 @@
 import { z } from "zod";
 
-export type Post = {
-    post: {
+export interface Post {
+    _id: string;
+    title: string;
+    content: string;
+    author: {
         _id: string;
-        title: string;
-        content: string;
-        image: string;
-        createdAt: string;
-        author: {
-            _id: string;
-            username: string;
-        };
-        likes: string[];
-        likeCount: number;
-        commentsCount: number;
-        comments: string[];
+        username: string;
+        firstName?: string;
+        lastName?: string;
     };
-    likeStatus: "liked" | "unliked";
-};
+    categories?: {
+        _id: string;
+        name: string;
+    };
+    image: string;
+    createdAt: string;
+    updatedAt: string;
+    views: number;
+    status: "draft" | "published" | "archived";
+    likeCount: number;
+    likes: string[];
+    commentsCount: number;
+}
 
 export type User = {
     _id: string;
@@ -26,6 +31,9 @@ export type User = {
     username: string;
     email: string;
     createdAt: string;
+    isEmailVerified: boolean;
+    emailVerificationToken: string;
+    emailVerificationTokenExpiry: string;
 };
 
 export type BlogCardProps = {
@@ -66,5 +74,25 @@ export const loginSchema = z.object({
     password: z.string().min(1, "Password is required"),
 });
 
+export type SearchParams = {
+    search?: string;
+    searchField?: string;
+};
+
+export const postSchema = z.object({
+    title: z.string().min(1, "Title is required").max(100, "Title must be 100 characters or less"),
+    content: z.string().min(10, "Content must be at least 10 characters long"),
+    category: z.enum(["technology", "lifestyle", "travel", "food"]),
+    image: z
+        .any()
+        .refine((file) => file?.[0]?.size <= 5000000, {
+            message: "Image size must be less than 5MB",
+        })
+        .refine((file) => ["image/jpeg", "image/png"].includes(file?.[0]?.type), {
+            message: "Image must be either JPEG or PNG",
+        }),
+});
+
+export type PostForm = z.infer<typeof postSchema>;
 export type SignupForm = z.infer<typeof signupSchema>;
 export type LoginForm = z.infer<typeof loginSchema>;

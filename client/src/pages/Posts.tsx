@@ -1,34 +1,65 @@
-import BlogCard from "@/components/BlogCard";
-import FeaturedPost from "@/components/FeaturedPost";
 import Layout from "@/components/Layout";
+import BlogCard from "@/components/post/BlogCard";
+import { PostSearch } from "@/components/post/PostSearch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { POSTS_PER_PAGE, getPosts } from "@/helper";
+import { POSTS_PER_PAGE, getPosts } from "@/helper/index";
+import type { Post, SearchParams } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
-export default function Home() {
-    const [currentPage, setCurrentPage] = useState(1);
+export default function Posts() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const currentPage = Number(searchParams.get("page")) || 1;
+
+    const searchFilters = {
+        search: searchParams.get("search") || "",
+        searchField: searchParams.get("searchField") || "title",
+    };
+
     const { data, isLoading, isError, error } = useQuery({
-        queryKey: ["posts", currentPage],
-        queryFn: () => getPosts(currentPage, POSTS_PER_PAGE),
+        queryKey: ["posts", searchParams.toString()],
+        queryFn: () => getPosts(currentPage, POSTS_PER_PAGE, searchFilters),
     });
+
+    const handleSearch = (filters: SearchParams) => {
+        const newParams = new URLSearchParams();
+        newParams.set("page", "1");
+        if (filters.search) newParams.set("search", filters.search);
+        if (filters.searchField) newParams.set("searchField", filters.searchField);
+        setSearchParams(newParams);
+    };
 
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= (data?.totalPages ?? 0)) {
-            setCurrentPage(newPage);
+            searchParams.set("page", newPage.toString());
+            setSearchParams(searchParams);
         }
     };
 
-    const featuredPost = data?.posts[0];
-    const recentPosts = data?.posts.slice(1);
     const hasNoPosts = !isLoading && !isError && (!data?.posts || data.posts.length === 0);
-    const hasOnlyOnePost = !isLoading && !isError && data?.posts?.length === 1;
+    const showPosts = !isLoading && !isError && data?.posts && data.posts.length > 0;
+    const showPagination = !isLoading && !isError && data?.totalPages && data.totalPages > 1;
 
     return (
         <Layout>
             <div className="flex flex-col min-h-screen space-y-8 py-8">
+                <div className="space-y-2">
+                    <h2 className="text-2xl font-bold tracking-tight">Search Posts</h2>
+                    <p className="text-muted-foreground">
+                        Find the content you're looking for using our advanced search.
+                    </p>
+                </div>
+
+                <PostSearch
+                    initialFilters={{
+                        search: searchFilters.search,
+                        searchField: searchFilters.searchField,
+                    }}
+                    onSearch={handleSearch}
+                />
+
                 {isLoading && (
                     <div className="flex justify-center items-center h-64">
                         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -52,30 +83,19 @@ export default function Home() {
                     </Alert>
                 )}
 
-                {!isLoading && !isError && featuredPost && (
-                    <>
-                        <section>
-                            <h2 className="text-2xl font-semibold mb-4">
-                                {hasOnlyOnePost ? "Latest Post" : "Featured"}
-                            </h2>
-                            <FeaturedPost post={featuredPost} />
-                        </section>
-
-                        {!hasOnlyOnePost && recentPosts && recentPosts.length > 0 && (
-                            <section>
-                                <h2 className="text-2xl font-semibold mb-4">Recent Posts</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {recentPosts.map((post) => (
-                                        <BlogCard key={post._id} post={post} />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-                    </>
+                {showPosts && (
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-4">All Posts</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {data.posts.map((post: Post) => (
+                                <BlogCard key={post._id} post={post} />
+                            ))}
+                        </div>
+                    </section>
                 )}
 
-                {!isLoading && !isError && data?.totalPages && data?.totalPages > 1 && (
-                    <div className="sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t py-4">
+                {showPagination && (
+                    <div className="py-4">
                         <div className="container flex justify-center items-center space-x-4">
                             <Button
                                 variant="outline"

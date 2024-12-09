@@ -10,7 +10,7 @@ interface ReadingTimeResult {
     imageTime?: number;
 }
 
-function calculateReadingTime(content: string, imageCount = 0): ReadingTimeResult {
+export function calculateReadingTime(content: string, imageCount = 0): ReadingTimeResult {
     const wordsPerMinute = 275;
     const roundTo = 1;
     const imageReadingTimeFactor = 0;

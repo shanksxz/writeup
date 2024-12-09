@@ -1,24 +1,29 @@
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/config";
+import { User } from "../models";
 import type { JwtPayload } from "../types";
 import ApiError from "../utils/apiError";
+import { handleControllerError } from "../utils/helper";
 
 export const auth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const token = req.cookies.token;
-    console.log("token", token);
     if (!token) {
-      console.log("No token provided");
       throw new ApiError(401, "Unauthorized - No token provided");
     }
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-      console.log("decoded", decoded);
-      req.user = decoded;
+      const user = await User.findById(decoded.id);
+      if (!user) {
+        throw new ApiError(401, "Unauthorized - Invalid token");
+      }
+      req.user = {
+        id: user._id.toString(),
+        role: user.role,
+      };
       next();
     } catch (jwtError) {
-      console.log("jwtError", jwtError);
       if (jwtError instanceof jwt.JsonWebTokenError) {
         throw new ApiError(401, "Unauthorized - Invalid token");
       } else if (jwtError instanceof jwt.TokenExpiredError) {
@@ -28,10 +33,24 @@ export const auth = async (req: Request, res: Response, next: NextFunction): Pro
       }
     }
   } catch (error) {
-    if (error instanceof ApiError) {
-      res.status(error.statusCode).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: "An unexpected error occurred" });
+    handleControllerError(error, res);
+  }
+};
+
+export const isAdmin = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      throw new ApiError(404, "User not found");
     }
+
+    if (user.role !== "admin") {
+      throw new ApiError(403, "Access denied. Admin privileges required");
+    }
+
+    next();
+  } catch (error) {
+    handleControllerError(error, res);
   }
 };
