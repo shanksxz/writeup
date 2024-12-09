@@ -19,8 +19,10 @@ export default function Posts() {
     };
 
     const { data, isLoading, isError, error } = useQuery({
-        queryKey: ["posts", searchParams.toString()],
+        queryKey: ["posts", currentPage, searchFilters.search, searchFilters.searchField],
         queryFn: () => getPosts(currentPage, POSTS_PER_PAGE, searchFilters),
+        staleTime: 1000 * 60,
+        gcTime: 1000 * 60 * 5,
     });
 
     const handleSearch = (filters: SearchParams) => {

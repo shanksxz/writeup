@@ -48,19 +48,7 @@ export function buildSearchQuery(params: ValidatedSearchQuery): mongoose.FilterQ
       case "content":
         query.content = { $regex: params.search, $options: "i" };
         break;
-      //   case "author":
-      //    NOTE: why we have to handle this in the aggregation pipeline?
-      // because we need to unwind the author details
-      // unwind means we need to get the author details from the users collection
-      //     break;
-      case "tags":
-        query.tags = { $regex: params.search, $options: "i" };
-        break;
-      default:
-        query.$text = { $search: params.search };
     }
-  } else if (params.search?.trim()) {
-    query.$text = { $search: params.search };
   }
   return query;
 }
@@ -69,7 +57,10 @@ export function buildAggregationPipeline(query: any, params: ValidatedSearchQuer
   const skip = (params.page - 1) * params.limit;
   const pipeline: PipelineStage[] = [];
 
-  // if searching by author, add a lookup stage first
+  if (params.search?.trim() && (!params.searchField || params.searchField === "all")) {
+    pipeline.push({ $match: { $text: { $search: params.search } } });
+  }
+
   if (params.searchField === "author" && params.search) {
     pipeline.push(
       {
@@ -80,29 +71,13 @@ export function buildAggregationPipeline(query: any, params: ValidatedSearchQuer
           as: "authorDetails",
         },
       },
-      // unwind the author details
       { $unwind: "$authorDetails" },
       {
         $match: {
           $or: [
-            {
-              "authorDetails.username": {
-                $regex: params.search,
-                $options: "i",
-              },
-            },
-            {
-              "authorDetails.firstName": {
-                $regex: params.search,
-                $options: "i",
-              },
-            },
-            {
-              "authorDetails.lastName": {
-                $regex: params.search,
-                $options: "i",
-              },
-            },
+            { "authorDetails.username": { $regex: params.search, $options: "i" } },
+            { "authorDetails.firstName": { $regex: params.search, $options: "i" } },
+            { "authorDetails.lastName": { $regex: params.search, $options: "i" } },
           ],
         },
       },

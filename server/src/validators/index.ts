@@ -39,7 +39,7 @@ export const searchQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().default(10),
   search: z.string().optional(),
-  searchField: z.enum(["title", "content", "author", "tags"]).optional(),
+  searchField: z.enum(["title", "content", "author", "all"]).optional(),
   category: z.string().optional(),
   author: z.string().optional(),
   status: z.enum(["draft", "published", "archived"]).optional(),
