@@ -10,7 +10,8 @@
             "suspicious": {
                 "noConsoleLog": "warn",
                 "noEmptyInterface": "off",
-                "noArrayIndexKey": "off"
+                "noArrayIndexKey": "off",
+                "noExplicitAny": "warn"
             },
             "recommended": true,
             "correctness": {
@@ -36,7 +37,7 @@
         "indentStyle": "space",
         "indentWidth": 4,
         "enabled": true,
-        "lineWidth": 100,
+        "lineWidth": 120,
         "ignore": ["node_modules", "dist", "out", "build", "public", "tsconfig.*"]
     }
 }

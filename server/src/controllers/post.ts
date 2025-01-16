@@ -148,12 +148,18 @@ export const getUserPosts = async (req: Request<{}, {}, {}, PaginationQuery>, re
       .limit(limit);
 
     res.status(200).json({
-      posts,
-      currentPage: page,
-      totalPages,
-      totalPosts,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1,
+      success: true,
+      data: {
+        posts,
+        pagination: {
+          total: totalPosts,
+          currentPage: page,
+          totalPages,
+          totalPosts,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+      }
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

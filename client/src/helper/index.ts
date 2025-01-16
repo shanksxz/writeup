@@ -7,18 +7,14 @@ type PostResponse = {
     currentPage: number;
     totalPosts: number;
     hasNextPage: boolean;
-    hasPrevPage: boolean;
+    hasPrevpage: boolean;
 };
 
 export const url = import.meta.env.VITE_API_URL;
 export const POSTS_PER_PAGE = 5;
 export const POSTS_PER_PAGE_MY_POSTS = 2;
 
-export const getPosts = async (
-    page: number,
-    limit: number,
-    searchParams: SearchParams = {},
-): Promise<PostResponse> => {
+export const getPosts = async (page: number, limit: number, searchParams: SearchParams = {}): Promise<PostResponse> => {
     const queryParams = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),

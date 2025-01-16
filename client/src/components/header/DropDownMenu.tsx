@@ -8,7 +8,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useAuth } from "@/context/useAuth";
+import { useAuth } from "@/context/use-auth";
 import type { User } from "@/types";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
@@ -48,9 +48,7 @@ export default function DropDownMenu({ user }: { user: User }) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/")}>Explore</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/create/post")}>
-                    Create Post
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/create/post")}>Create Post</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleLogout()}>Logout</DropdownMenuItem>
             </DropdownMenuContent>

@@ -8,7 +8,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useAuth } from "@/context/useAuth";
+import { useAuth } from "@/context/use-auth";
 import axios from "axios";
 import { Menu } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -49,19 +49,12 @@ export default function Navbar() {
                                     </Avatar>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => navigate("/profile")}>
-                                        Profile
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleLogout}>
-                                        Log out
-                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => navigate("/profile")}>Profile</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         ) : (
-                            <Button
-                                className="h-8 rounded-full"
-                                onClick={() => navigate("/auth/login")}
-                            >
+                            <Button className="h-8 rounded-full" onClick={() => navigate("/auth/login")}>
                                 Sign In
                             </Button>
                         )}
@@ -79,28 +72,16 @@ function MainNav() {
                 <span className="font-bold text-lg">WriteUp</span>
             </Link>
             <nav className="flex items-center space-x-6 text-sm font-medium">
-                <Link
-                    to="/"
-                    className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
+                <Link to="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
                     Home
                 </Link>
-                <Link
-                    to="/posts"
-                    className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
+                <Link to="/posts" className="transition-colors hover:text-foreground/80 text-foreground/60">
                     Explore
                 </Link>
-                <Link
-                    to="/user/post"
-                    className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
+                <Link to="/user/post" className="transition-colors hover:text-foreground/80 text-foreground/60">
                     My Posts
                 </Link>
-                <Link
-                    to="/create/post"
-                    className="transition-colors hover:text-foreground/80 text-foreground/60"
-                >
+                <Link to="/create/post" className="transition-colors hover:text-foreground/80 text-foreground/60">
                     Create Post
                 </Link>
             </nav>
@@ -125,28 +106,16 @@ function MobileNav() {
                     <Link to="/" className="flex items-center">
                         <span className="font-bold text-lg">WriteUp</span>
                     </Link>
-                    <Link
-                        to="/"
-                        className="transition-colors hover:text-foreground/80 text-foreground/60"
-                    >
+                    <Link to="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
                         Home
                     </Link>
-                    <Link
-                        to="/posts"
-                        className="transition-colors hover:text-foreground/80 text-foreground/60"
-                    >
+                    <Link to="/posts" className="transition-colors hover:text-foreground/80 text-foreground/60">
                         Explore
                     </Link>
-                    <Link
-                        to="/user/post"
-                        className="transition-colors hover:text-foreground/80 text-foreground/60"
-                    >
+                    <Link to="/user/post" className="transition-colors hover:text-foreground/80 text-foreground/60">
                         My Posts
                     </Link>
-                    <Link
-                        to="/create/post"
-                        className="transition-colors hover:text-foreground/80 text-foreground/60"
-                    >
+                    <Link to="/create/post" className="transition-colors hover:text-foreground/80 text-foreground/60">
                         Create Post
                     </Link>
                 </nav>
